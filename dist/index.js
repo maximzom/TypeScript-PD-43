@@ -1,182 +1,282 @@
 "use strict";
-const findProduct = (products, id) => {
-    if (!Array.isArray(products)) {
-        throw new Error('Products must be an array');
+var StudentStatus;
+(function (StudentStatus) {
+    StudentStatus["Active"] = "Active";
+    StudentStatus["Academic_Leave"] = "Academic_Leave";
+    StudentStatus["Graduated"] = "Graduated";
+    StudentStatus["Expelled"] = "Expelled";
+})(StudentStatus || (StudentStatus = {}));
+var CourseType;
+(function (CourseType) {
+    CourseType["Mandatory"] = "Mandatory";
+    CourseType["Optional"] = "Optional";
+    CourseType["Special"] = "Special";
+})(CourseType || (CourseType = {}));
+var Semester;
+(function (Semester) {
+    Semester["First"] = "First";
+    Semester["Second"] = "Second";
+})(Semester || (Semester = {}));
+var GradeValue;
+(function (GradeValue) {
+    GradeValue[GradeValue["Excellent"] = 5] = "Excellent";
+    GradeValue[GradeValue["Good"] = 4] = "Good";
+    GradeValue[GradeValue["Satisfactory"] = 3] = "Satisfactory";
+    GradeValue[GradeValue["Unsatisfactory"] = 2] = "Unsatisfactory";
+})(GradeValue || (GradeValue = {}));
+var Faculty;
+(function (Faculty) {
+    Faculty["Computer_Science"] = "Computer_Science";
+    Faculty["Economics"] = "Economics";
+    Faculty["Law"] = "Law";
+    Faculty["Engineering"] = "Engineering";
+})(Faculty || (Faculty = {}));
+class UniversityManagementSystem {
+    constructor() {
+        this.students = [];
+        this.courses = [];
+        this.grades = [];
+        this.registrations = [];
+        this.nextStudentId = 1;
+        this.nextCourseId = 1;
     }
-    if (typeof id !== 'number' || id <= 0) {
-        throw new Error('ID must be a positive number');
-    }
-    return products.find(product => product.id === id);
-};
-const filterByPrice = (products, maxPrice) => {
-    if (!Array.isArray(products)) {
-        throw new Error('Products must be an array');
-    }
-    if (typeof maxPrice !== 'number' || maxPrice < 0) {
-        throw new Error('Max price must be a non-negative number');
-    }
-    return products.filter(product => product.price <= maxPrice);
-};
-const filterByCategory = (products, category) => {
-    if (!Array.isArray(products)) {
-        throw new Error('Products must be an array');
-    }
-    return products.filter(product => 'category' in product && product.category === category);
-};
-const addToCart = (cart, product, quantity) => {
-    if (!Array.isArray(cart)) {
-        throw new Error('Cart must be an array');
-    }
-    if (typeof quantity !== 'number' || quantity <= 0) {
-        throw new Error('Quantity must be a positive number');
-    }
-    const existingItemIndex = cart.findIndex(item => item.product.id === product.id);
-    if (existingItemIndex !== -1) {
-        const updatedCart = [...cart];
-        updatedCart[existingItemIndex] = {
-            ...updatedCart[existingItemIndex],
-            quantity: updatedCart[existingItemIndex].quantity + quantity
+    enrollStudent(studentData) {
+        const newStudent = {
+            id: this.nextStudentId++,
+            ...studentData
         };
-        return updatedCart;
+        this.students.push(newStudent);
+        console.log(`Студента ${studentData.fullName} зараховано на факультет ${studentData.faculty}.`);
+        return newStudent;
+    }
+    registerForCourse(studentId, courseId) {
+        const student = this.students.find(s => s.id === studentId);
+        const course = this.courses.find(c => c.id === courseId);
+        if (!student) {
+            throw new Error(`Студента з ідентифікатором ${studentId} не знайдено.`);
+        }
+        if (!course) {
+            throw new Error(`Курс з ідентифікатором ${courseId} не знайдено.`);
+        }
+        if (student.status !== StudentStatus.Active) {
+            throw new Error(`Студент ${student.fullName} не може реєструватися на курси через статус: ${student.status}.`);
+        }
+        if (student.faculty !== course.faculty) {
+            throw new Error(`Студент факультету ${student.faculty} не може реєструватися на курс факультету ${course.faculty}.`);
+        }
+        if (course.enrolledStudents >= course.maxStudents) {
+            throw new Error(`Курс "${course.name}" вже заповнений. Максимальна кількість: ${course.maxStudents}.`);
+        }
+        const existingRegistration = this.registrations.find(r => r.studentId === studentId && r.courseId === courseId);
+        if (existingRegistration) {
+            throw new Error(`Студент вже зареєстрований на курс "${course.name}".`);
+        }
+        this.registrations.push({ studentId, courseId });
+        course.enrolledStudents++;
+        console.log(`Студента ${student.fullName} зареєстровано на курс "${course.name}".`);
+    }
+    setGrade(studentId, courseId, grade) {
+        const student = this.students.find(s => s.id === studentId);
+        const course = this.courses.find(c => c.id === courseId);
+        if (!student) {
+            throw new Error(`Студента з ідентифікатором ${studentId} не знайдено.`);
+        }
+        if (!course) {
+            throw new Error(`Курс з ідентифікатором ${courseId} не знайдено.`);
+        }
+        const isRegistered = this.registrations.some(r => r.studentId === studentId && r.courseId === courseId);
+        if (!isRegistered) {
+            throw new Error(`Студент ${student.fullName} не зареєстрований на курс "${course.name}".`);
+        }
+        const existingGrade = this.grades.find(g => g.studentId === studentId && g.courseId === courseId);
+        if (existingGrade) {
+            existingGrade.grade = grade;
+            existingGrade.date = new Date();
+        }
+        else {
+            this.grades.push({
+                studentId,
+                courseId,
+                grade,
+                date: new Date(),
+                semester: course.semester
+            });
+        }
+        console.log(`Студенту ${student.fullName} виставлено оцінку ${grade} за курс "${course.name}".`);
+    }
+    updateStudentStatus(studentId, newStatus) {
+        const student = this.students.find(s => s.id === studentId);
+        if (!student) {
+            throw new Error(`Студента з ідентифікатором ${studentId} не знайдено.`);
+        }
+        this.validateStatusChange(student.status, newStatus);
+        const oldStatus = student.status;
+        student.status = newStatus;
+        console.log(`Статус студента ${student.fullName} змінено з ${oldStatus} на ${newStatus}.`);
+    }
+    getStudentsByFaculty(faculty) {
+        return this.students.filter(student => student.faculty === faculty);
+    }
+    getStudentGrades(studentId) {
+        const student = this.students.find(s => s.id === studentId);
+        if (!student) {
+            throw new Error(`Студента з ідентифікатором ${studentId} не знайдено.`);
+        }
+        return this.grades.filter(grade => grade.studentId === studentId);
+    }
+    getAvailableCourses(faculty, semester) {
+        return this.courses.filter(course => course.faculty === faculty &&
+            course.semester === semester &&
+            course.enrolledStudents < course.maxStudents);
+    }
+    calculateAverageGrade(studentId) {
+        const studentGrades = this.getStudentGrades(studentId);
+        if (studentGrades.length === 0) {
+            return 0;
+        }
+        const sum = studentGrades.reduce((total, gradeRecord) => total + gradeRecord.grade, 0);
+        return Number((sum / studentGrades.length).toFixed(2));
+    }
+    getTopStudentsByFaculty(faculty) {
+        const facultyStudents = this.getStudentsByFaculty(faculty);
+        return facultyStudents.filter(student => {
+            const averageGrade = this.calculateAverageGrade(student.id);
+            return averageGrade >= GradeValue.Excellent;
+        });
+    }
+    addCourse(courseData) {
+        const newCourse = {
+            id: this.nextCourseId++,
+            enrolledStudents: 0,
+            ...courseData
+        };
+        this.courses.push(newCourse);
+        console.log(`Курс "${courseData.name}" додано до системи.`);
+        return newCourse;
+    }
+    getAllStudents() {
+        return this.students;
+    }
+    getAllCourses() {
+        return this.courses;
+    }
+    validateStatusChange(oldStatus, newStatus) {
+        if ((oldStatus === StudentStatus.Expelled || oldStatus === StudentStatus.Graduated) &&
+            newStatus !== oldStatus) {
+            throw new Error(`Не можна змінити статус з ${oldStatus} на ${newStatus}.`);
+        }
+        if ((oldStatus === StudentStatus.Graduated || oldStatus === StudentStatus.Expelled) &&
+            newStatus === StudentStatus.Active) {
+            throw new Error(`Не можна повернути статус "Active" з ${oldStatus}.`);
+        }
+    }
+}
+function demonstrateSystem() {
+    console.log('ДЕМОНСТРАЦІЯ РОБОТИ СИСТЕМИ УПРАВЛІННЯ УНІВЕРСИТЕТОМ:');
+    console.log('');
+    const universitySystem = new UniversityManagementSystem();
+    console.log('1. ДОДАВАННЯ НАВЧАЛЬНИХ КУРСІВ:');
+    universitySystem.addCourse({
+        name: "Програмування на TypeScript",
+        type: CourseType.Mandatory,
+        credits: 6,
+        semester: Semester.First,
+        faculty: Faculty.Computer_Science,
+        maxStudents: 30
+    });
+    universitySystem.addCourse({
+        name: "Веб-розробка",
+        type: CourseType.Optional,
+        credits: 4,
+        semester: Semester.First,
+        faculty: Faculty.Computer_Science,
+        maxStudents: 25
+    });
+    universitySystem.addCourse({
+        name: "Мікроекономіка",
+        type: CourseType.Mandatory,
+        credits: 5,
+        semester: Semester.First,
+        faculty: Faculty.Economics,
+        maxStudents: 40
+    });
+    console.log('\n2. ЗАРАХУВАННЯ СТУДЕНТІВ:');
+    const student1 = universitySystem.enrollStudent({
+        fullName: "Іван Петренко",
+        faculty: Faculty.Computer_Science,
+        year: 2,
+        status: StudentStatus.Active,
+        enrollmentDate: new Date('2023-09-01'),
+        groupNumber: "CS-202"
+    });
+    const student2 = universitySystem.enrollStudent({
+        fullName: "Марія Коваленко",
+        faculty: Faculty.Computer_Science,
+        year: 2,
+        status: StudentStatus.Active,
+        enrollmentDate: new Date('2023-09-01'),
+        groupNumber: "CS-202"
+    });
+    const student3 = universitySystem.enrollStudent({
+        fullName: "Олександр Сидоренко",
+        faculty: Faculty.Economics,
+        year: 1,
+        status: StudentStatus.Active,
+        enrollmentDate: new Date('2023-09-01'),
+        groupNumber: "EC-101"
+    });
+    console.log('\n3. РЕЄСТРАЦІЯ СТУДЕНТІВ НА КУРСИ:');
+    try {
+        universitySystem.registerForCourse(student1.id, 1);
+        universitySystem.registerForCourse(student2.id, 1);
+        universitySystem.registerForCourse(student1.id, 2);
+        universitySystem.registerForCourse(student3.id, 3);
+    }
+    catch (error) {
+        console.error("Помилка реєстрації:", error.message);
+    }
+    console.log('\n4. ВИСТАВЛЕННЯ ОЦІНОК:');
+    try {
+        universitySystem.setGrade(student1.id, 1, GradeValue.Excellent);
+        universitySystem.setGrade(student1.id, 2, GradeValue.Good);
+        universitySystem.setGrade(student2.id, 1, GradeValue.Satisfactory);
+    }
+    catch (error) {
+        console.error("Помилка виставлення оцінки:", error.message);
+    }
+    console.log('\n5. ДЕМОНСТРАЦІЯ РОБОТИ МЕТОДІВ СИСТЕМИ:');
+    console.log('\nСтуденти факультету Computer Science:');
+    universitySystem.getStudentsByFaculty(Faculty.Computer_Science).forEach(student => {
+        console.log(`- ${student.fullName} (група ${student.groupNumber}).`);
+    });
+    console.log('\nОцінки студента Іван Петренко:');
+    universitySystem.getStudentGrades(student1.id).forEach(grade => {
+        const course = universitySystem.getAllCourses().find(c => c.id === grade.courseId);
+        console.log(`- ${course?.name}: ${grade.grade}.`);
+    });
+    console.log(`\nСередній бал студента Іван Петренко: ${universitySystem.calculateAverageGrade(student1.id)}.`);
+    console.log('\nДоступні курси для факультету Computer Science, 1 семестр:');
+    universitySystem.getAvailableCourses(Faculty.Computer_Science, Semester.First).forEach(course => {
+        console.log(`- ${course.name} (${course.enrolledStudents}/${course.maxStudents} студентів).`);
+    });
+    console.log('\nВідмінники факультету Computer Science:');
+    const topStudents = universitySystem.getTopStudentsByFaculty(Faculty.Computer_Science);
+    if (topStudents.length > 0) {
+        topStudents.forEach(student => {
+            console.log(`- ${student.fullName}.`);
+        });
     }
     else {
-        return [...cart, { product, quantity }];
+        console.log('- Відмінників не знайдено.');
     }
-};
-const removeFromCart = (cart, productId) => {
-    if (!Array.isArray(cart)) {
-        throw new Error('Cart must be an array');
+    console.log('\n6. ЗМІНА СТАТУСУ СТУДЕНТА:');
+    try {
+        universitySystem.updateStudentStatus(student1.id, StudentStatus.Graduated);
     }
-    return cart.filter(item => item.product.id !== productId);
-};
-const calculateTotal = (cart) => {
-    if (!Array.isArray(cart)) {
-        throw new Error('Cart must be an array');
+    catch (error) {
+        console.error("Помилка зміни статусу:", error.message);
     }
-    return cart.reduce((total, item) => {
-        return total + (item.product.price * item.quantity);
-    }, 0);
-};
-const getCartItemsCount = (cart) => {
-    if (!Array.isArray(cart)) {
-        throw new Error('Cart must be an array');
-    }
-    return cart.reduce((count, item) => count + item.quantity, 0);
-};
-const electronicsProducts = [
-    {
-        id: 1,
-        name: "iPhone 15",
-        price: 999,
-        description: "Смартфон від компанії Apple",
-        category: 'electronics',
-        brand: 'Apple',
-        warranty: 24
-    },
-    {
-        id: 2,
-        name: "Samsung Galaxy S24",
-        price: 899,
-        description: "Смартфон від компанії Samsung",
-        category: 'electronics',
-        brand: 'Samsung',
-        warranty: 18
-    },
-    {
-        id: 3,
-        name: "MacBook Pro",
-        price: 2499,
-        description: "Ноутбук для професійних завдань",
-        category: 'electronics',
-        brand: 'Apple',
-        warranty: 36
-    }
-];
-const clothingProducts = [
-    {
-        id: 4,
-        name: "Футболка",
-        price: 25,
-        description: "Бавовняна футболка чорного кольору",
-        category: 'clothing',
-        size: 'M',
-        color: 'Чорний',
-        material: 'Бавовна'
-    },
-    {
-        id: 5,
-        name: "Джинси",
-        price: 89,
-        description: "Класичні сині джинси",
-        category: 'clothing',
-        size: 'L',
-        color: 'Синій',
-        material: 'Деним'
-    }
-];
-const booksProducts = [
-    {
-        id: 6,
-        name: "TypeScript для початківців",
-        price: 35,
-        description: "Навчальний посібник з TypeScript",
-        category: 'books',
-        author: "Іван Петренко",
-        publisher: "IT Видавництво",
-        pages: 300
-    },
-    {
-        id: 7,
-        name: "React та його екосистема",
-        price: 45,
-        description: "Поглиблений посібник по React",
-        category: 'books',
-        author: "Марія Коваленко",
-        publisher: "Frontend Publishing",
-        pages: 450
-    }
-];
-const demoFunctions = () => {
-    console.log('- ДЕМОНСТРАЦІЯ РОБОТИ ІНТЕРНЕТ-МАГАЗИНУ:\n');
-    console.log('1. ПОШУК ТОВАРІВ.');
-    const foundPhone = findProduct(electronicsProducts, 1);
-    console.log('Знайдений телефон:', foundPhone);
-    const foundBook = findProduct(booksProducts, 6);
-    console.log('Знайдена книга:', foundBook);
-    const notFound = findProduct(electronicsProducts, 999);
-    console.log('Неіснуючий товар:', notFound);
-    console.log('\n2. ФІЛЬТРАЦІЯ ЗА ЦІНОЮ.');
-    const affordableElectronics = filterByPrice(electronicsProducts, 1000);
-    console.log('Електроніка до 1000$:', affordableElectronics);
-    const affordableClothing = filterByPrice(clothingProducts, 50);
-    console.log('Одяг до 50$:', affordableClothing);
-    console.log('\n3. ФІЛЬТРАЦІЯ ЗА КАТЕГОРІЄЮ.');
-    const allProducts = [...electronicsProducts, ...clothingProducts, ...booksProducts];
-    const allElectronics = filterByCategory(allProducts, 'electronics');
-    console.log('Вся електроніка:', allElectronics);
-    console.log('\n4. РОБОТА З КОШИКОМ.');
-    let cart = [];
-    if (foundPhone) {
-        cart = addToCart(cart, foundPhone, 2);
-    }
-    if (foundBook) {
-        cart = addToCart(cart, foundBook, 1);
-    }
-    const jeans = findProduct(clothingProducts, 5);
-    if (jeans) {
-        cart = addToCart(cart, jeans, 1);
-    }
-    console.log('Кошик після додавання товарів:', cart);
-    console.log('Кількість товарів у кошику:', getCartItemsCount(cart));
-    console.log('Загальна вартість кошика:', calculateTotal(cart));
-    console.log('\n5. ВИДАЛЕННЯ ТОВАРУ З КОШИКА.');
-    cart = removeFromCart(cart, 1);
-    console.log('Кошик після видалення телефону:', cart);
-    console.log('Оновлена кількість товарів:', getCartItemsCount(cart));
-    console.log('Оновлена загальна вартість:', calculateTotal(cart));
-    console.log('\n6. ДЕМОНСТРАЦІЯ ТИПОБЕЗПЕКИ:');
-    console.log('Типобезпека забезпечує коректність даних.');
-    console.log('\nДемонстрація завершена успішно.');
-};
-demoFunctions();
+    console.log('\n- ДЕМОНСТРАЦІЯ ЗАВЕРШЕНА.');
+}
+demonstrateSystem();
 //# sourceMappingURL=index.js.map

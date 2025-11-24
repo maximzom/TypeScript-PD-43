@@ -1,384 +1,602 @@
-// 1. ОСНОВНІ ТИПИ ДАНИХ ДЛЯ ІНТЕРНЕТ-МАГАЗИНУ.
-
-// Базовий тип для всіх товарів в магазині.
-type BaseProduct = {
-  id: number;        // Унікальний номер товару.
-  name: string;      // Назва товару.
-  price: number;     // Ціна товару в гривнях.
-  description: string; // Опис товару для покупців.
-};
-
-// Тип для електроніки, який розширює базовий тип.
-type Electronics = BaseProduct & {
-  category: 'electronics'; // Категорія товару - електроніка.
-  brand: string;           // Бренд виробника товару.
-  warranty: number;        // Гарантія в місяцях.
-};
-
-// Тип для одягу, який розширює базовий тип.
-type Clothing = BaseProduct & {
-  category: 'clothing'; // Категорія товару - одяг.
-  size: string;         // Розмір одягу.
-  color: string;        // Колір одягу.
-  material: string;     // Матеріал, з якого зроблено одяг.
-};
-
-// Тип для книг, який розширює базовий тип.
-type Books = BaseProduct & {
-  category: 'books';   // Категорія товару - книги.
-  author: string;      // Автор книги.
-  publisher: string;   // Видавництво книги.
-  pages: number;       // Кількість сторінок у книзі.
-};
-
-// Універсальний тип, який об'єднує всі види товарів.
-type Product = Electronics | Clothing | Books;
-
-// 2. ФУНКЦІЇ ДЛЯ ПОШУКУ ТА ФІЛЬТРАЦІЇ ТОВАРІВ.
+// - ВИЗНАЧЕННЯ ПЕРЕЛІЧЕНЬ (ENUM).
 
 /**
- * Знаходить товар за його унікальним номером.
- * @param products - масив товарів, в якому потрібно шукати.
- * @param id - унікальний номер товару для пошуку.
- * @returns знайдений товар або undefined, якщо товар не знайдено.
+ * Перелік можливих статусів студента в університеті:
+ * - Active - студент активно навчається.
+ * - Academic_Leave - студент у академічній відпустці  .
+ * - Graduated - студент успішно закінчив навчання.
+ * - Expelled - студента відраховано з університету.
  */
-const findProduct = <T extends BaseProduct>(products: T[], id: number): T | undefined => {
-  // Перевіряємо, чи products дійсно є масивом.
-  if (!Array.isArray(products)) {
-    // Якщо не масив - викидаємо помилку.
-    throw new Error('Products must be an array');
-  }
-  // Перевіряємо, чи id є додатним числом.
-  if (typeof id !== 'number' || id <= 0) {
-    // Якщо id некоректний - викидаємо помилку.
-    throw new Error('ID must be a positive number');
-  }
-  
-  // Шукаємо товар з вказаним id у масиві товарів.
-  return products.find(product => product.id === id);
-};
+enum StudentStatus {
+  Active = 'Active',
+  Academic_Leave = 'Academic_Leave',
+  Graduated = 'Graduated',
+  Expelled = 'Expelled'
+}
 
 /**
- * Фільтрує товари за максимальною ціною.
- * @param products - масив товарів для фільтрації.
- * @param maxPrice - максимальна ціна для фільтрації.
- * @returns масив товарів, ціна яких не перевищує maxPrice.
+ * Перелік типів навчальних курсів:
+ * - Mandatory - обов'язковий курс для вивчення.
+ * - Optional - курс за вибором студента.
+ * - Special - спеціальний курс.
  */
-const filterByPrice = <T extends BaseProduct>(products: T[], maxPrice: number): T[] => {
-  // Перевіряємо, чи products дійсно є масивом.
-  if (!Array.isArray(products)) {
-    // Якщо не масив - викидаємо помилку.
-    throw new Error('Products must be an array');
-  }
-  // Перевіряємо, чи maxPrice є невід'ємним числом.
-  if (typeof maxPrice !== 'number' || maxPrice < 0) {
-    // Якщо maxPrice некоректний - викидаємо помилку.
-    throw new Error('Max price must be a non-negative number');
-  }
-  
-  // Фільтруємо товари, залишаючи тільки ті, ціна яких <= maxPrice.
-  return products.filter(product => product.price <= maxPrice);
-};
+enum CourseType {
+  Mandatory = 'Mandatory',
+  Optional = 'Optional', 
+  Special = 'Special'
+}
 
 /**
- * Фільтрує товари за категорією.
- * @param products - масив товарів для фільтрації.
- * @param category - категорія для фільтрації.
- * @returns масив товарів вказаної категорії.
+ * Перелік навчальних семестрів:
+ * - First - перший семестр навчального року.
+ * - Second - другий семестр навчального року.
  */
-const filterByCategory = <T extends BaseProduct>(
-  products: T[], 
-  category: string
-): T[] => {
-  // Перевіряємо, чи products дійсно є масивом.
-  if (!Array.isArray(products)) {
-    // Якщо не масив - викидаємо помилку.
-    throw new Error('Products must be an array');
-  }
-  
-  // Фільтруємо товари, залишаючи тільки ті, що належать до вказаної категорії.
-  return products.filter(product => 
-    'category' in product && (product as any).category === category
-  );
-};
-
-// 3. СИСТЕМА КОШИКА.
-
-// Тип для елемента кошика, який містить товар та його кількість.
-type CartItem<T> = {
-  product: T;     // Товар, який додано до кошика.
-  quantity: number; // Кількість одиниць цього товару.
-};
+enum Semester {
+  First = 'First',
+  Second = 'Second'
+}
 
 /**
- * Додає товар до кошика покупок.
- * @param cart - поточний стан кошика.
- * @param product - товар, який потрібно додати.
- * @param quantity - кількість одиниць товару.
- * @returns оновлений кошик з доданим товаром.
+ * Система оцінювання знань студентів:
+ * - Excellent - відмінно (5 балів).
+ * - Good - добре (4 бали).
+ * - Satisfactory - задовільно (3 бали). 
+ * - Unsatisfactory - незадовільно (2 бали).
  */
-const addToCart = <T extends BaseProduct>(
-  cart: CartItem<T>[],
-  product: T,
-  quantity: number
-): CartItem<T>[] => {
-  // Перевіряємо, чи cart дійсно є масивом.
-  if (!Array.isArray(cart)) {
-    // Якщо не масив - викидаємо помилку.
-    throw new Error('Cart must be an array');
-  }
-  // Перевіряємо, чи quantity є додатним числом.
-  if (typeof quantity !== 'number' || quantity <= 0) {
-    // Якщо quantity некоректний - викидаємо помилку.
-    throw new Error('Quantity must be a positive number');
-  }
+enum GradeValue {
+  Excellent = 5,
+  Good = 4,
+  Satisfactory = 3,
+  Unsatisfactory = 2
+}
+
+/**
+ * Перелік факультетів університету:
+ * - Computer_Science - факультет комп'ютерних наук.
+ * - Economics - економічний факультет.
+ * - Law - юридичний факультет
+ * - Engineering - інженерний факультет
+ */
+enum Faculty {
+  Computer_Science = 'Computer_Science',
+  Economics = 'Economics',
+  Law = 'Law',
+  Engineering = 'Engineering'
+}
+
+// - ВИЗНАЧЕННЯ ІНТЕРФЕЙСІВ ДАНИХ.
+
+/**
+ * Інтерфейс для зберігання інформації про студента:
+ * - id - унікальний ідентифікатор студента.
+ * - fullName - повне ім'я студента.
+ * - faculty - факультет, на якому навчається студент.
+ * - year - рік навчання студента.
+ * - status - поточний статус студента.
+ * - enrollmentDate - дата зарахування до університету.
+ * - groupNumber - номер навчальної групи студента.
+ */
+interface Student {
+  id: number;
+  fullName: string;
+  faculty: Faculty;
+  year: number;
+  status: StudentStatus;
+  enrollmentDate: Date;
+  groupNumber: string;
+}
+
+/**
+ * Інтерфейс для зберігання інформації про навчальний курс:
+ * - id - унікальний ідентифікатор курсу.
+ * - name - назва навчального курсу.
+ * - type - тип курсу (обов'язковий, вибірковий, спеціальний).
+ * - credits - кількість кредитів за курс.
+ * - semester - семестр, в якому викладається курс.
+ * - faculty - факультет, для якого призначений курс.
+ * - maxStudents - максимальна кількість студентів на курсі.
+ * - enrolledStudents - поточна кількість записаних студентів.
+ */
+interface Course {
+  id: number;
+  name: string;
+  type: CourseType;
+  credits: number;
+  semester: Semester;
+  faculty: Faculty;
+  maxStudents: number;
+  enrolledStudents: number;
+}
+
+/**
+ * Інтерфейс для зберігання інформації про оцінку студента:
+ * - studentId - ідентифікатор студента, якому виставлено оцінку.
+ * - courseId - ідентифікатор курсу, за який виставлено оцінку.
+ * - grade - отримана оцінка.
+ * - date - дата виставлення оцінки.
+ * - semester - семестр, в якому отримано оцінку.
+ */
+interface GradeRecord {
+  studentId: number;
+  courseId: number;
+  grade: GradeValue;
+  date: Date;
+  semester: Semester;
+}
+
+// - ОСНОВНИЙ КЛАС СИСТЕМИ УПРАВЛІННЯ.
+
+/**
+ * Головний клас системи управління університетом.
+ * Відповідає за всі операції зі студентами, курсами та оцінками.
+ */
+class UniversityManagementSystem {
+  // Масив для зберігання всіх студентів університету.
+  private students: Student[] = [];
   
-  // Шукаємо індекс товару, який вже є в кошику.
-  const existingItemIndex = cart.findIndex(item => item.product.id === product.id);
+  // Масив для зберігання всіх навчальних курсів.
+  private courses: Course[] = [];
   
-  // Перевіряємо, чи товар вже є в кошику.
-  if (existingItemIndex !== -1) {
-    // Якщо товар вже є в кошику - створюємо копію кошика.
-    const updatedCart = [...cart];
-    // Оновлюємо кількість існуючого товару.
-    updatedCart[existingItemIndex] = {
-      ...updatedCart[existingItemIndex], // Копіюємо існуючий елемент.
-      quantity: updatedCart[existingItemIndex].quantity + quantity // Додаємо нову кількість.
+  // Масив для зберігання всіх оцінок студентів.
+  private grades: GradeRecord[] = [];
+  
+  // Масив для відстеження реєстрацій студентів на курси.
+  private registrations: { studentId: number; courseId: number }[] = [];
+  
+  // Лічильник для генерації унікальних ідентифікаторів студентів.
+  private nextStudentId: number = 1;
+  
+  // Лічильник для генерації унікальних ідентифікаторів курсів.
+  private nextCourseId: number = 1;
+
+  /**
+   * Метод для зарахування нового студента до університету.
+   * Приймає дані студента без ідентифікатора.
+   * Повертає об'єкт студента з присвоєним ідентифікатором.
+   */
+  enrollStudent(studentData: Omit<Student, "id">): Student {
+    // Створюємо нового студента з унікальним ідентифікатором.
+    const newStudent: Student = {
+      id: this.nextStudentId++,  // Присвоюємо ідентифікатор та збільшуємо лічильник.
+      ...studentData             // Копіюємо всі передані дані студента.
     };
-    // Повертаємо оновлений кошик.
-    return updatedCart;
+    
+    // Додаємо нового студента до загального списку.
+    this.students.push(newStudent);
+    
+    // Виводимо повідомлення про успішне зарахування.
+    console.log(`Студента ${studentData.fullName} зараховано на факультет ${studentData.faculty}.`);
+    
+    // Повертаємо створений об'єкт студента.
+    return newStudent;
+  }
+
+  /**
+   * Метод для реєстрації студента на навчальний курс.
+   * Перевіряє можливість реєстрації перед додаванням.
+   */
+  registerForCourse(studentId: number, courseId: number): void {
+    // Шукаємо студента за ідентифікатором.
+    const student = this.students.find(s => s.id === studentId);
+    
+    // Шукаємо курс за ідентифікатором.
+    const course = this.courses.find(c => c.id === courseId);
+
+    // Перевіряємо, чи існують студент та курс.
+    if (!student) {
+      throw new Error(`Студента з ідентифікатором ${studentId} не знайдено.`);
+    }
+    if (!course) {
+      throw new Error(`Курс з ідентифікатором ${courseId} не знайдено.`);
+    }
+
+    // Перевіряємо, чи студент має активний статус.
+    if (student.status !== StudentStatus.Active) {
+      throw new Error(`Студент ${student.fullName} не може реєструватися на курси через статус: ${student.status}.`);
+    }
+
+    // Перевіряємо відповідність факультету студента та курсу.
+    if (student.faculty !== course.faculty) {
+      throw new Error(`Студент факультету ${student.faculty} не може реєструватися на курс факультету ${course.faculty}.`);
+    }
+
+    // Перевіряємо наявність вільних місць на курсі.
+    if (course.enrolledStudents >= course.maxStudents) {
+      throw new Error(`Курс "${course.name}" вже заповнений. Максимальна кількість: ${course.maxStudents}.`);
+    }
+
+    // Перевіряємо, чи студент вже зареєстрований на цей курс.
+    const existingRegistration = this.registrations.find(
+      r => r.studentId === studentId && r.courseId === courseId
+    );
+    if (existingRegistration) {
+      throw new Error(`Студент вже зареєстрований на курс "${course.name}".`);
+    }
+
+    // Додаємо запис про реєстрацію.
+    this.registrations.push({ studentId, courseId });
+    
+    // Збільшуємо лічильник зареєстрованих студентів на курсі.
+    course.enrolledStudents++;
+    
+    // Виводимо повідомлення про успішну реєстрацію
+    console.log(`Студента ${student.fullName} зареєстровано на курс "${course.name}".`);
+  }
+
+  /**
+   * Метод для виставлення оцінки студенту за курс.
+   * Перевіряє, чи студент зареєстрований на курс перед виставленням оцінки.
+   */
+  setGrade(studentId: number, courseId: number, grade: GradeValue): void {
+    // Знаходимо студента за ідентифікатором.
+    const student = this.students.find(s => s.id === studentId);
+    
+    // Знаходимо курс за ідентифікатором.
+    const course = this.courses.find(c => c.id === courseId);
+
+    // Перевіряємо існування студента та курсу.
+    if (!student) {
+      throw new Error(`Студента з ідентифікатором ${studentId} не знайдено.`);
+    }
+    if (!course) {
+      throw new Error(`Курс з ідентифікатором ${courseId} не знайдено.`);
+    }
+
+    // Перевіряємо, чи студент зареєстрований на курс.
+    const isRegistered = this.registrations.some(
+      r => r.studentId === studentId && r.courseId === courseId
+    );
+    if (!isRegistered) {
+      throw new Error(`Студент ${student.fullName} не зареєстрований на курс "${course.name}".`);
+    }
+
+    // Шукаємо існуючу оцінку студента за цей курс.
+    const existingGrade = this.grades.find(
+      g => g.studentId === studentId && g.courseId === courseId
+    );
+
+    // Якщо оцінка вже існує - оновлюємо її.
+    if (existingGrade) {
+      existingGrade.grade = grade;           // Оновлюємо значення оцінки.
+      existingGrade.date = new Date();       // Оновлюємо дату виставлення оцінки.
+    } else {
+      // Якщо оцінки немає - створюємо новий запис.
+      this.grades.push({
+        studentId,
+        courseId,
+        grade,
+        date: new Date(),                    // Встановлюємо поточну дату.
+        semester: course.semester            // Копіюємо семестр з курсу.
+      });
+    }
+
+    // Виводимо повідомлення про успішне виставлення оцінки.
+    console.log(`Студенту ${student.fullName} виставлено оцінку ${grade} за курс "${course.name}".`);
+  }
+
+  /**
+   * Метод для оновлення статусу студента.
+   * Виконує валідацію зміни статусу відповідно до правил університету.
+   */
+  updateStudentStatus(studentId: number, newStatus: StudentStatus): void {
+    // Знаходимо студента за ідентифікатором.
+    const student = this.students.find(s => s.id === studentId);
+    
+    // Перевіряємо існування студента.
+    if (!student) {
+      throw new Error(`Студента з ідентифікатором ${studentId} не знайдено.`);
+    }
+
+    // Виконуємо валідацію зміни статусу.
+    this.validateStatusChange(student.status, newStatus);
+    
+    // Зберігаємо старий статус для повідомлення.
+    const oldStatus = student.status;
+    
+    // Оновлюємо статус студента.
+    student.status = newStatus;
+    
+    // Виводимо повідомлення про зміну статусу.
+    console.log(`Статус студента ${student.fullName} змінено з ${oldStatus} на ${newStatus}.`);
+  }
+
+  /**
+   * Метод для отримання списку студентів за факультетом.
+   * Повертає масив студентів вказаного факультету.
+   */
+  getStudentsByFaculty(faculty: Faculty): Student[] {
+    // Фільтруємо студентів за вказаним факультетом.
+    return this.students.filter(student => student.faculty === faculty);
+  }
+
+  /**
+   * Метод для отримання всіх оцінок конкретного студента.
+   * Повертає масив оцінок студента за всіма курсами.
+   */
+  getStudentGrades(studentId: number): GradeRecord[] {
+    // Знаходимо студента за ідентифікатором.
+    const student = this.students.find(s => s.id === studentId);
+    
+    // Перевіряємо існування студента
+    if (!student) {
+      throw new Error(`Студента з ідентифікатором ${studentId} не знайдено.`);
+    }
+
+    // Фільтруємо оцінки за ідентифікатором студента.
+    return this.grades.filter(grade => grade.studentId === studentId);
+  }
+
+  /**
+   * Метод для отримання доступних курсів для факультету та семестру.
+   * Повертає курси, на які ще можна записатися.
+   */
+  getAvailableCourses(faculty: Faculty, semester: Semester): Course[] {
+    // Фільтруємо курси за факультетом, семестром та наявністю вільних місць.
+    return this.courses.filter(course => 
+      course.faculty === faculty && 
+      course.semester === semester &&
+      course.enrolledStudents < course.maxStudents
+    );
+  }
+
+  /**
+   * Метод для розрахунку середнього балу студента.
+   * Повертає середнє арифметичне всіх оцінок студента.
+   */
+  calculateAverageGrade(studentId: number): number {
+    // Отримуємо всі оцінки студента.
+    const studentGrades = this.getStudentGrades(studentId);
+    
+    // Якщо оцінок немає - повертаємо 0.
+    if (studentGrades.length === 0) {
+      return 0;
+    }
+
+    // Обчислюємо суму всіх оцінок.
+    const sum = studentGrades.reduce((total, gradeRecord) => total + gradeRecord.grade, 0);
+    
+    // Повертаємо середнє значення, округлене до 2 знаків після коми.
+    return Number((sum / studentGrades.length).toFixed(2));
+  }
+
+  /**
+   * Метод для отримання списку відмінників факультету.
+   * Відмінником вважається студент з середнім балом 5.0.
+   */
+  getTopStudentsByFaculty(faculty: Faculty): Student[] {
+    // Отримуємо всіх студентів факультету.
+    const facultyStudents = this.getStudentsByFaculty(faculty);
+    
+    // Фільтруємо студентів, залишаючи тільки відмінників.
+    return facultyStudents.filter(student => {
+      // Обчислюємо середній бал студента
+      const averageGrade = this.calculateAverageGrade(student.id);
+      
+      // Залишаємо тільки студентів з середнім балом 5.0.
+      return averageGrade >= GradeValue.Excellent;
+    });
+  }
+
+  /**
+   * Метод для додавання нового навчального курсу.
+   * Приймає дані курсу без ідентифікатора та лічильника студентів.
+   * Повертає об'єкт курсу з присвоєним ідентифікатором.
+   */
+  addCourse(courseData: Omit<Course, "id" | "enrolledStudents">): Course {
+    // Створюємо новий курс з унікальним ідентифікатором
+    const newCourse: Course = {
+      id: this.nextCourseId++,       // Присвоюємо ідентифікатор та збільшуємо лічильник.
+      enrolledStudents: 0,           // Ініціалізуємо лічильник студентів нулем.
+      ...courseData                  // Копіюємо всі передані дані курсу.
+    };
+    
+    // Додаємо новий курс до загального списку.
+    this.courses.push(newCourse);
+    
+    // Виводимо повідомлення про успішне додавання курсу.
+    console.log(`Курс "${courseData.name}" додано до системи.`);
+    
+    // Повертаємо створений об'єкт курсу.
+    return newCourse;
+  }
+
+  /**
+   * Метод для отримання всіх студентів системи.
+   * Використовується для внутрішніх потреб та демонстрації.
+   */
+  getAllStudents(): Student[] {
+    return this.students;
+  }
+
+  /**
+   * Метод для отримання всіх курсів системи.
+   * Використовується для внутрішніх потреб та демонстрації.
+   */
+  getAllCourses(): Course[] {
+    return this.courses;
+  }
+
+  // - ПРИВАТНІ МЕТОДИ ВАЛІДАЦІЇ.
+
+  /**
+   * Приватний метод для валідації зміни статусу студента.
+   * Перевіряє, чи допустимий перехід між статусами.
+   */
+  private validateStatusChange(oldStatus: StudentStatus, newStatus: StudentStatus): void {
+    // Перевіряємо, чи не намагаються змінити статус виключеного або випускника.
+    if ((oldStatus === StudentStatus.Expelled || oldStatus === StudentStatus.Graduated) && 
+        newStatus !== oldStatus) {
+      throw new Error(`Не можна змінити статус з ${oldStatus} на ${newStatus}.`);
+    }
+
+    // Перевіряємо, чи не намагаються активувати випускника або виключеного студента.
+    if ((oldStatus === StudentStatus.Graduated || oldStatus === StudentStatus.Expelled) && 
+        newStatus === StudentStatus.Active) {
+      throw new Error(`Не можна повернути статус "Active" з ${oldStatus}.`);
+    }
+  }
+}
+
+// - ФУНКЦІЯ ДЛЯ ДЕМОНСТРАЦІЇ РОБОТИ СИСТЕМИ.
+
+/**
+ * Функція для демонстрації всіх можливостей системи управління університетом.
+ * Створює тестові дані та показує роботу всіх методів.
+ */
+function demonstrateSystem(): void {
+  // Виводимо заголовок демонстрації
+  console.log('ДЕМОНСТРАЦІЯ РОБОТИ СИСТЕМИ УПРАВЛІННЯ УНІВЕРСИТЕТОМ:');
+  console.log('');
+
+  // Створюємо новий екземпляр системи управління
+  const universitySystem = new UniversityManagementSystem();
+
+  // Додаємо навчальні курси до системи
+  console.log('1. ДОДАВАННЯ НАВЧАЛЬНИХ КУРСІВ:');
+  
+  // Додаємо курс з програмування на TypeScript
+  universitySystem.addCourse({
+    name: "Програмування на TypeScript",
+    type: CourseType.Mandatory,
+    credits: 6,
+    semester: Semester.First,
+    faculty: Faculty.Computer_Science,
+    maxStudents: 30
+  });
+
+  // Додаємо курс з веб-розробки
+  universitySystem.addCourse({
+    name: "Веб-розробка",
+    type: CourseType.Optional,
+    credits: 4,
+    semester: Semester.First,
+    faculty: Faculty.Computer_Science,
+    maxStudents: 25
+  });
+
+  // Додаємо курс з мікроекономіки
+  universitySystem.addCourse({
+    name: "Мікроекономіка",
+    type: CourseType.Mandatory,
+    credits: 5,
+    semester: Semester.First,
+    faculty: Faculty.Economics,
+    maxStudents: 40
+  });
+
+  // Зараховуємо студентів до університету
+  console.log('\n2. ЗАРАХУВАННЯ СТУДЕНТІВ:');
+  
+  // Зараховуємо першого студента
+  const student1 = universitySystem.enrollStudent({
+    fullName: "Іван Петренко",
+    faculty: Faculty.Computer_Science,
+    year: 2,
+    status: StudentStatus.Active,
+    enrollmentDate: new Date('2023-09-01'),
+    groupNumber: "CS-202"
+  });
+
+  // Зараховуємо другого студента
+  const student2 = universitySystem.enrollStudent({
+    fullName: "Марія Коваленко",
+    faculty: Faculty.Computer_Science,
+    year: 2,
+    status: StudentStatus.Active,
+    enrollmentDate: new Date('2023-09-01'),
+    groupNumber: "CS-202"
+  });
+
+  // Зараховуємо третього студента
+  const student3 = universitySystem.enrollStudent({
+    fullName: "Олександр Сидоренко",
+    faculty: Faculty.Economics,
+    year: 1,
+    status: StudentStatus.Active,
+    enrollmentDate: new Date('2023-09-01'),
+    groupNumber: "EC-101"
+  });
+
+  // Реєструємо студентів на курси
+  console.log('\n3. РЕЄСТРАЦІЯ СТУДЕНТІВ НА КУРСИ:');
+  
+  // Виконуємо реєстрації в блоці try-catch для перехоплення помилок
+  try {
+    universitySystem.registerForCourse(student1.id, 1);
+    universitySystem.registerForCourse(student2.id, 1);
+    universitySystem.registerForCourse(student1.id, 2);
+    universitySystem.registerForCourse(student3.id, 3);
+  } catch (error: any) {
+    // Виводимо повідомлення про помилку реєстрації
+    console.error("Помилка реєстрації:", error.message);
+  }
+
+  // Виставляємо оцінки студентам
+  console.log('\n4. ВИСТАВЛЕННЯ ОЦІНОК:');
+  
+  // Виконуємо виставлення оцінок в блоці try-catch для перехоплення помилок
+  try {
+    universitySystem.setGrade(student1.id, 1, GradeValue.Excellent);
+    universitySystem.setGrade(student1.id, 2, GradeValue.Good);
+    universitySystem.setGrade(student2.id, 1, GradeValue.Satisfactory);
+  } catch (error: any) {
+    // Виводимо повідомлення про помилку виставлення оцінки
+    console.error("Помилка виставлення оцінки:", error.message);
+  }
+
+  // Демонструємо роботу всіх методів системи
+  console.log('\n5. ДЕМОНСТРАЦІЯ РОБОТИ МЕТОДІВ СИСТЕМИ:');
+  
+  // Отримуємо студентів факультету комп'ютерних наук
+  console.log('\nСтуденти факультету Computer Science:');
+  universitySystem.getStudentsByFaculty(Faculty.Computer_Science).forEach(student => {
+    console.log(`- ${student.fullName} (група ${student.groupNumber}).`);
+  });
+
+  // Отримуємо оцінки першого студента
+  console.log('\nОцінки студента Іван Петренко:');
+  universitySystem.getStudentGrades(student1.id).forEach(grade => {
+    // Знаходимо курс за ідентифікатором для виведення назви
+    const course = universitySystem.getAllCourses().find(c => c.id === grade.courseId);
+    console.log(`- ${course?.name}: ${grade.grade}.`);
+  });
+
+  // Обчислюємо середній бал першого студента
+  console.log(`\nСередній бал студента Іван Петренко: ${universitySystem.calculateAverageGrade(student1.id)}.`);
+
+  // Отримуємо доступні курси для факультету комп'ютерних наук у першому семестрі
+  console.log('\nДоступні курси для факультету Computer Science, 1 семестр:');
+  universitySystem.getAvailableCourses(Faculty.Computer_Science, Semester.First).forEach(course => {
+    console.log(`- ${course.name} (${course.enrolledStudents}/${course.maxStudents} студентів).`);
+  });
+
+  // Отримуємо список відмінників факультету комп'ютерних наук
+  console.log('\nВідмінники факультету Computer Science:');
+  const topStudents = universitySystem.getTopStudentsByFaculty(Faculty.Computer_Science);
+  
+  // Перевіряємо, чи є відмінники
+  if (topStudents.length > 0) {
+    topStudents.forEach(student => {
+      console.log(`- ${student.fullName}.`);
+    });
   } else {
-    // Якщо товару немає в кошику - додаємо новий елемент.
-    return [...cart, { product, quantity }];
+    console.log('- Відмінників не знайдено.');
   }
-};
 
-/**
- * Видаляє товар з кошика за його ID.
- * @param cart - поточний стан кошика.
- * @param productId - ID товару для видалення.
- * @returns оновлений кошик без вказаного товару.
- */
-const removeFromCart = <T extends BaseProduct>(
-  cart: CartItem<T>[],
-  productId: number
-): CartItem<T>[] => {
-  // Перевіряємо, чи cart дійсно є масивом.
-  if (!Array.isArray(cart)) {
-    // Якщо не масив - викидаємо помилку.
-    throw new Error('Cart must be an array');
+  // Демонструємо зміну статусу студента
+  console.log('\n6. ЗМІНА СТАТУСУ СТУДЕНТА:');
+  
+  // Виконуємо зміну статусу в блоці try-catch для перехоплення помилок
+  try {
+    universitySystem.updateStudentStatus(student1.id, StudentStatus.Graduated);
+  } catch (error: any) {
+    // Виводимо повідомлення про помилку зміни статусу
+    console.error("Помилка зміни статусу:", error.message);
   }
-  
-  // Фільтруємо кошик, залишаючи всі товари крім того, що має вказаний ID.
-  return cart.filter(item => item.product.id !== productId);
-};
 
-/**
- * Розраховує загальну вартість всіх товарів у кошику.
- * @param cart - кошик з товарами.
- * @returns загальна вартість товарів у кошику.
- */
-const calculateTotal = <T extends BaseProduct>(cart: CartItem<T>[]): number => {
-  // Перевіряємо, чи cart дійсно є масивом.
-  if (!Array.isArray(cart)) {
-    // Якщо не масив - викидаємо помилку.
-    throw new Error('Cart must be an array');
-  }
-  
-  // Обчислюємо загальну суму, перемножуючи ціну кожного товару на його кількість.
-  return cart.reduce((total, item) => {
-    return total + (item.product.price * item.quantity);
-  }, 0); // Початкове значення суми - 0.
-};
+  // Виводимо завершальне повідомлення
+  console.log('\n- ДЕМОНСТРАЦІЯ ЗАВЕРШЕНА.');
+}
 
-/**
- * Підраховує загальну кількість товарів у кошику.
- * @param cart - кошик з товарами.
- * @returns загальна кількість всіх товарів у кошику.
- */
-const getCartItemsCount = <T extends BaseProduct>(cart: CartItem<T>[]): number => {
-  // Перевіряємо, чи cart дійсно є масивом.
-  if (!Array.isArray(cart)) {
-    // Якщо не масив - викидаємо помилку.
-    throw new Error('Cart must be an array');
-  }
-  
-  // Підсумовуємо кількість кожного товару в кошику.
-  return cart.reduce((count, item) => count + item.quantity, 0); // Початкове значення - 0.
-};
-
-// 4. ТЕСТОВІ ДАНІ ДЛЯ ПЕРЕВІРКИ РОБОТИ СИСТЕМИ.
-
-// Масив товарів з категорії електроніка.
-const electronicsProducts: Electronics[] = [
-  {
-    id: 1,
-    name: "iPhone 15",
-    price: 999,
-    description: "Смартфон від компанії Apple",
-    category: 'electronics',
-    brand: 'Apple',
-    warranty: 24
-  },
-  {
-    id: 2,
-    name: "Samsung Galaxy S24",
-    price: 899,
-    description: "Смартфон від компанії Samsung",
-    category: 'electronics',
-    brand: 'Samsung',
-    warranty: 18
-  },
-  {
-    id: 3,
-    name: "MacBook Pro",
-    price: 2499,
-    description: "Ноутбук для професійних завдань",
-    category: 'electronics',
-    brand: 'Apple',
-    warranty: 36
-  }
-];
-
-// Масив товарів з категорії одяг.
-const clothingProducts: Clothing[] = [
-  {
-    id: 4,
-    name: "Футболка",
-    price: 25,
-    description: "Бавовняна футболка чорного кольору",
-    category: 'clothing',
-    size: 'M',
-    color: 'Чорний',
-    material: 'Бавовна'
-  },
-  {
-    id: 5,
-    name: "Джинси",
-    price: 89,
-    description: "Класичні сині джинси",
-    category: 'clothing',
-    size: 'L',
-    color: 'Синій',
-    material: 'Деним'
-  }
-];
-
-// Масив товарів з категорії книги.
-const booksProducts: Books[] = [
-  {
-    id: 6,
-    name: "TypeScript для початківців",
-    price: 35,
-    description: "Навчальний посібник з TypeScript",
-    category: 'books',
-    author: "Іван Петренко",
-    publisher: "IT Видавництво",
-    pages: 300
-  },
-  {
-    id: 7,
-    name: "React та його екосистема",
-    price: 45,
-    description: "Поглиблений посібник по React",
-    category: 'books',
-    author: "Марія Коваленко",
-    publisher: "Frontend Publishing",
-    pages: 450
-  }
-];
-
-// 5. ДЕМОНСТРАЦІЯ РОБОТИ ВСІХ ФУНКЦІЙ.
-
-/**
- * Демонструє роботу всіх створених функцій інтернет-магазину.
- */
-const demoFunctions = () => {
-  // Виводимо заголовок демонстрації.
-  console.log('- ДЕМОНСТРАЦІЯ РОБОТИ ІНТЕРНЕТ-МАГАЗИНУ:\n');
-  
-  // Демонстрація пошуку товарів.
-  console.log('1. ПОШУК ТОВАРІВ.');
-  // Шукаємо телефон за ID 1.
-  const foundPhone = findProduct(electronicsProducts, 1);
-  // Виводимо знайдений телефон.
-  console.log('Знайдений телефон:', foundPhone);
-  // Шукаємо книгу за ID 6.
-  const foundBook = findProduct(booksProducts, 6);
-  // Виводимо знайдену книгу.
-  console.log('Знайдена книга:', foundBook);
-  // Шукаємо неіснуючий товар.
-  const notFound = findProduct(electronicsProducts, 999);
-  // Виводимо результат пошуку неіснуючого товару.
-  console.log('Неіснуючий товар:', notFound);
-  
-  // Демонстрація фільтрації за ціною.
-  console.log('\n2. ФІЛЬТРАЦІЯ ЗА ЦІНОЮ.');
-  // Фільтруємо електроніку за ціною до 1000.
-  const affordableElectronics = filterByPrice(electronicsProducts, 1000);
-  // Виводимо відфільтровану електроніку.
-  console.log('Електроніка до 1000$:', affordableElectronics);
-  // Фільтруємо одяг за ціною до 50.
-  const affordableClothing = filterByPrice(clothingProducts, 50);
-  // Виводимо відфільтрований одяг.
-  console.log('Одяг до 50$:', affordableClothing);
-  
-  // Демонстрація фільтрації за категорією.
-  console.log('\n3. ФІЛЬТРАЦІЯ ЗА КАТЕГОРІЄЮ.');
-  // Об'єднуємо всі товари в один масив.
-  const allProducts = [...electronicsProducts, ...clothingProducts, ...booksProducts];
-  // Фільтруємо тільки електроніку.
-  const allElectronics = filterByCategory(allProducts, 'electronics');
-  // Виводимо відфільтровану електроніку.
-  console.log('Вся електроніка:', allElectronics);
-  
-  // Демонстрація роботи з кошиком.
-  console.log('\n4. РОБОТА З КОШИКОМ.');
-  // Створюємо порожній кошик.
-  let cart: CartItem<Product>[] = [];
-  // Додаємо телефон до кошика в кількості 2 штук.
-  if (foundPhone) {
-    cart = addToCart(cart, foundPhone, 2);
-  }
-  // Додаємо книгу до кошика в кількості 1 штуки.
-  if (foundBook) {
-    cart = addToCart(cart, foundBook, 1);
-  }
-  // Знаходимо джинси за ID.
-  const jeans = findProduct(clothingProducts, 5);
-  // Додаємо джинси до кошика в кількості 1 штуки.
-  if (jeans) {
-    cart = addToCart(cart, jeans, 1);
-  }
-  // Виводимо вміст кошика.
-  console.log('Кошик після додавання товарів:', cart);
-  // Виводимо загальну кількість товарів у кошику.
-  console.log('Кількість товарів у кошику:', getCartItemsCount(cart));
-  // Виводимо загальну вартість кошика.
-  console.log('Загальна вартість кошика:', calculateTotal(cart));
-  
-  // Демонстрація видалення товару з кошика.
-  console.log('\n5. ВИДАЛЕННЯ ТОВАРУ З КОШИКА.');
-  // Видаляємо телефон з кошика за ID.
-  cart = removeFromCart(cart, 1);
-  // Виводимо оновлений кошик.
-  console.log('Кошик після видалення телефону:', cart);
-  // Виводимо оновлену кількість товарів у кошику.
-  console.log('Оновлена кількість товарів:', getCartItemsCount(cart));
-  // Виводимо оновлену загальну вартість кошика.
-  console.log('Оновлена загальна вартість:', calculateTotal(cart));
-  
-  // Демонстрація типобезпеки.
-  console.log('\n6. ДЕМОНСТРАЦІЯ ТИПОБЕЗПЕКИ:');
-  // Цей код викличе помилку TypeScript, якщо розкоментувати.
-  // const invalidProduct = { id: 99, name: "Invalid" };
-  // cart = addToCart(cart, invalidProduct, 1);
-  // Виводимо підтвердження типобезпеки.
-  console.log('Типобезпека забезпечує коректність даних.');
-  
-  // Виводимо завершення демонстрації.
-  console.log('\nДемонстрація завершена успішно.');
-};
-
-// Запускаємо демонстрацію роботи всіх функцій.
-demoFunctions();
+// Запускаємо демонстрацію роботи системи
+demonstrateSystem();
