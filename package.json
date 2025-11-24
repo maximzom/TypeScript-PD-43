@@ -1,5 +1,5 @@
 {
-  "name": "PR3",
+  "name": "PR5",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -15,7 +15,5 @@
     "ts-node": "^10.9.0",
     "@types/node": "^20.0.0"
   },
-  "keywords": ["typescript", "schedule", "university"],
-  "author": "Maksym Zelinskyi",
-  "license": "MIT"
+  "author": "Maksym Zelinskyi"
 }

@@ -1,534 +1,384 @@
-// 1. ОСНОВНІ ТИПИ ДАНИХ.
+// 1. ОСНОВНІ ТИПИ ДАНИХ ДЛЯ ІНТЕРНЕТ-МАГАЗИНУ.
 
-// Визначаємо дні тижня, коли проходять заняття (тільки робочі дні).
-type DayOfWeek = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday";
-
-// Визначаємо можливі часові проміжки для занять.
-type TimeSlot = 
-  | "8:30-10:00" 
-  | "10:15-11:45" 
-  | "12:15-13:45" 
-  | "14:00-15:30" 
-  | "15:45-17:15";
-
-// Визначаємо типи навчальних занять.
-type CourseType = "Lecture" | "Seminar" | "Lab" | "Practice";
-
-// 2. СТРУКТУРИ ДАНИХ.
-
-// Створюємо тип для викладача з усіма необхідними полями:
-type Professor = {
-  id: number;              // Унікальний номер викладача.
-  name: string;           // ПІБ викладача.
-  department: string;     // Кафедра, де працює викладач.
+// Базовий тип для всіх товарів в магазині.
+type BaseProduct = {
+  id: number;        // Унікальний номер товару.
+  name: string;      // Назва товару.
+  price: number;     // Ціна товару в гривнях.
+  description: string; // Опис товару для покупців.
 };
 
-// Створюємо тип для навчальної аудиторії:
-type Classroom = {
-  number: string;         // Номер аудиторії (наприклад, "101").
-  capacity: number;       // Місткість аудиторії (кількість студентів).
-  hasProjector: boolean;  // Чи є проектор в аудиторії.
+// Тип для електроніки, який розширює базовий тип.
+type Electronics = BaseProduct & {
+  category: 'electronics'; // Категорія товару - електроніка.
+  brand: string;           // Бренд виробника товару.
+  warranty: number;        // Гарантія в місяцях.
 };
 
-// Створюємо тип для навчального курсу:
-type Course = {
-  id: number;            // Унікальний номер курсу.
-  name: string;          // Назва курсу.
-  type: CourseType;      // Тип заняття (лекція, семінар тощо).
+// Тип для одягу, який розширює базовий тип.
+type Clothing = BaseProduct & {
+  category: 'clothing'; // Категорія товару - одяг.
+  size: string;         // Розмір одягу.
+  color: string;        // Колір одягу.
+  material: string;     // Матеріал, з якого зроблено одяг.
 };
 
-// Створюємо тип для окремого заняття в розкладі:
-type Lesson = {
-  courseId: number;        // ID курсу, який викладається.
-  professorId: number;     // ID викладача, який веде заняття.
-  classroomNumber: string; // Номер аудиторії, де проходить заняття.
-  dayOfWeek: DayOfWeek;    // День тижня заняття.
-  timeSlot: TimeSlot;      // Час проведення заняття.
+// Тип для книг, який розширює базовий тип.
+type Books = BaseProduct & {
+  category: 'books';   // Категорія товару - книги.
+  author: string;      // Автор книги.
+  publisher: string;   // Видавництво книги.
+  pages: number;       // Кількість сторінок у книзі.
 };
 
-// Розширюємо тип заняття додатковим полем lessonId для унікальної ідентифікації.
-type ScheduledLesson = Lesson & { lessonId: number };
+// Універсальний тип, який об'єднує всі види товарів.
+type Product = Electronics | Clothing | Books;
 
-// Створюємо тип для опису конфлікту в розкладі:
-type ScheduleConflict = {
-  type: "ProfessorConflict" | "ClassroomConflict";  // Тип конфлікту.
-  conflictingLesson: ScheduledLesson;               // Існуюче заняття, що створює конфлікт.
-  newLesson: Lesson;                               // Нове заняття, яке намагаємося додати.
+// 2. ФУНКЦІЇ ДЛЯ ПОШУКУ ТА ФІЛЬТРАЦІЇ ТОВАРІВ.
+
+/**
+ * Знаходить товар за його унікальним номером.
+ * @param products - масив товарів, в якому потрібно шукати.
+ * @param id - унікальний номер товару для пошуку.
+ * @returns знайдений товар або undefined, якщо товар не знайдено.
+ */
+const findProduct = <T extends BaseProduct>(products: T[], id: number): T | undefined => {
+  // Перевіряємо, чи products дійсно є масивом.
+  if (!Array.isArray(products)) {
+    // Якщо не масив - викидаємо помилку.
+    throw new Error('Products must be an array');
+  }
+  // Перевіряємо, чи id є додатним числом.
+  if (typeof id !== 'number' || id <= 0) {
+    // Якщо id некоректний - викидаємо помилку.
+    throw new Error('ID must be a positive number');
+  }
+  
+  // Шукаємо товар з вказаним id у масиві товарів.
+  return products.find(product => product.id === id);
 };
 
-// 3. ДАНІ СИСТЕМИ
+/**
+ * Фільтрує товари за максимальною ціною.
+ * @param products - масив товарів для фільтрації.
+ * @param maxPrice - максимальна ціна для фільтрації.
+ * @returns масив товарів, ціна яких не перевищує maxPrice.
+ */
+const filterByPrice = <T extends BaseProduct>(products: T[], maxPrice: number): T[] => {
+  // Перевіряємо, чи products дійсно є масивом.
+  if (!Array.isArray(products)) {
+    // Якщо не масив - викидаємо помилку.
+    throw new Error('Products must be an array');
+  }
+  // Перевіряємо, чи maxPrice є невід'ємним числом.
+  if (typeof maxPrice !== 'number' || maxPrice < 0) {
+    // Якщо maxPrice некоректний - викидаємо помилку.
+    throw new Error('Max price must be a non-negative number');
+  }
+  
+  // Фільтруємо товари, залишаючи тільки ті, ціна яких <= maxPrice.
+  return products.filter(product => product.price <= maxPrice);
+};
 
-// Створюємо порожні масиви для зберігання всіх даних системи:
-const professors: Professor[] = [];      // Масив викладачів.
-const classrooms: Classroom[] = [];      // Масив аудиторій.
-const courses: Course[] = [];            // Масив курсів.
-const schedule: ScheduledLesson[] = [];  // Масив розкладу занять.
+/**
+ * Фільтрує товари за категорією.
+ * @param products - масив товарів для фільтрації.
+ * @param category - категорія для фільтрації.
+ * @returns масив товарів вказаної категорії.
+ */
+const filterByCategory = <T extends BaseProduct>(
+  products: T[], 
+  category: string
+): T[] => {
+  // Перевіряємо, чи products дійсно є масивом.
+  if (!Array.isArray(products)) {
+    // Якщо не масив - викидаємо помилку.
+    throw new Error('Products must be an array');
+  }
+  
+  // Фільтруємо товари, залишаючи тільки ті, що належать до вказаної категорії.
+  return products.filter(product => 
+    'category' in product && (product as any).category === category
+  );
+};
 
-// Змінна для відстеження наступного доступного ID заняття
-let nextLessonId = 1;
+// 3. СИСТЕМА КОШИКА.
 
-// Константи для розрахунків - всі робочі дні тижня.
-const WORK_DAYS: DayOfWeek[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+// Тип для елемента кошика, який містить товар та його кількість.
+type CartItem<T> = {
+  product: T;     // Товар, який додано до кошика.
+  quantity: number; // Кількість одиниць цього товару.
+};
 
-// Константи для розрахунків - всі можливі часові проміжки.
-const TIME_SLOTS: TimeSlot[] = [
-  "8:30-10:00", "10:15-11:45", "12:15-13:45", 
-  "14:00-15:30", "15:45-17:15"
+/**
+ * Додає товар до кошика покупок.
+ * @param cart - поточний стан кошика.
+ * @param product - товар, який потрібно додати.
+ * @param quantity - кількість одиниць товару.
+ * @returns оновлений кошик з доданим товаром.
+ */
+const addToCart = <T extends BaseProduct>(
+  cart: CartItem<T>[],
+  product: T,
+  quantity: number
+): CartItem<T>[] => {
+  // Перевіряємо, чи cart дійсно є масивом.
+  if (!Array.isArray(cart)) {
+    // Якщо не масив - викидаємо помилку.
+    throw new Error('Cart must be an array');
+  }
+  // Перевіряємо, чи quantity є додатним числом.
+  if (typeof quantity !== 'number' || quantity <= 0) {
+    // Якщо quantity некоректний - викидаємо помилку.
+    throw new Error('Quantity must be a positive number');
+  }
+  
+  // Шукаємо індекс товару, який вже є в кошику.
+  const existingItemIndex = cart.findIndex(item => item.product.id === product.id);
+  
+  // Перевіряємо, чи товар вже є в кошику.
+  if (existingItemIndex !== -1) {
+    // Якщо товар вже є в кошику - створюємо копію кошика.
+    const updatedCart = [...cart];
+    // Оновлюємо кількість існуючого товару.
+    updatedCart[existingItemIndex] = {
+      ...updatedCart[existingItemIndex], // Копіюємо існуючий елемент.
+      quantity: updatedCart[existingItemIndex].quantity + quantity // Додаємо нову кількість.
+    };
+    // Повертаємо оновлений кошик.
+    return updatedCart;
+  } else {
+    // Якщо товару немає в кошику - додаємо новий елемент.
+    return [...cart, { product, quantity }];
+  }
+};
+
+/**
+ * Видаляє товар з кошика за його ID.
+ * @param cart - поточний стан кошика.
+ * @param productId - ID товару для видалення.
+ * @returns оновлений кошик без вказаного товару.
+ */
+const removeFromCart = <T extends BaseProduct>(
+  cart: CartItem<T>[],
+  productId: number
+): CartItem<T>[] => {
+  // Перевіряємо, чи cart дійсно є масивом.
+  if (!Array.isArray(cart)) {
+    // Якщо не масив - викидаємо помилку.
+    throw new Error('Cart must be an array');
+  }
+  
+  // Фільтруємо кошик, залишаючи всі товари крім того, що має вказаний ID.
+  return cart.filter(item => item.product.id !== productId);
+};
+
+/**
+ * Розраховує загальну вартість всіх товарів у кошику.
+ * @param cart - кошик з товарами.
+ * @returns загальна вартість товарів у кошику.
+ */
+const calculateTotal = <T extends BaseProduct>(cart: CartItem<T>[]): number => {
+  // Перевіряємо, чи cart дійсно є масивом.
+  if (!Array.isArray(cart)) {
+    // Якщо не масив - викидаємо помилку.
+    throw new Error('Cart must be an array');
+  }
+  
+  // Обчислюємо загальну суму, перемножуючи ціну кожного товару на його кількість.
+  return cart.reduce((total, item) => {
+    return total + (item.product.price * item.quantity);
+  }, 0); // Початкове значення суми - 0.
+};
+
+/**
+ * Підраховує загальну кількість товарів у кошику.
+ * @param cart - кошик з товарами.
+ * @returns загальна кількість всіх товарів у кошику.
+ */
+const getCartItemsCount = <T extends BaseProduct>(cart: CartItem<T>[]): number => {
+  // Перевіряємо, чи cart дійсно є масивом.
+  if (!Array.isArray(cart)) {
+    // Якщо не масив - викидаємо помилку.
+    throw new Error('Cart must be an array');
+  }
+  
+  // Підсумовуємо кількість кожного товару в кошику.
+  return cart.reduce((count, item) => count + item.quantity, 0); // Початкове значення - 0.
+};
+
+// 4. ТЕСТОВІ ДАНІ ДЛЯ ПЕРЕВІРКИ РОБОТИ СИСТЕМИ.
+
+// Масив товарів з категорії електроніка.
+const electronicsProducts: Electronics[] = [
+  {
+    id: 1,
+    name: "iPhone 15",
+    price: 999,
+    description: "Смартфон від компанії Apple",
+    category: 'electronics',
+    brand: 'Apple',
+    warranty: 24
+  },
+  {
+    id: 2,
+    name: "Samsung Galaxy S24",
+    price: 899,
+    description: "Смартфон від компанії Samsung",
+    category: 'electronics',
+    brand: 'Samsung',
+    warranty: 18
+  },
+  {
+    id: 3,
+    name: "MacBook Pro",
+    price: 2499,
+    description: "Ноутбук для професійних завдань",
+    category: 'electronics',
+    brand: 'Apple',
+    warranty: 36
+  }
 ];
 
-// 4. БАЗОВІ ОПЕРАЦІЇ.
-
-/**
- * Додає нового викладача до системи.
- * @param professor - об'єкт викладача для додавання.
- */
-function addProfessor(professor: Professor): void {
-  // Перевіряємо, чи не існує вже викладач з таким самим ID.
-  const existingProfessor = professors.find(p => p.id === professor.id);
-  // Якщо викладач з таким ID ще не існує - додаємо його.
-  if (!existingProfessor) {
-    professors.push(professor);
+// Масив товарів з категорії одяг.
+const clothingProducts: Clothing[] = [
+  {
+    id: 4,
+    name: "Футболка",
+    price: 25,
+    description: "Бавовняна футболка чорного кольору",
+    category: 'clothing',
+    size: 'M',
+    color: 'Чорний',
+    material: 'Бавовна'
+  },
+  {
+    id: 5,
+    name: "Джинси",
+    price: 89,
+    description: "Класичні сині джинси",
+    category: 'clothing',
+    size: 'L',
+    color: 'Синій',
+    material: 'Деним'
   }
-}
+];
 
-/**
- * Додає нову аудиторію до системи.
- * @param classroom - об'єкт аудиторії для додавання.
- */
-function addClassroom(classroom: Classroom): void {
-  // Перевіряємо, чи не існує вже аудиторія з таким самим номером.
-  const existingClassroom = classrooms.find(c => c.number === classroom.number);
-  // Якщо аудиторія з таким номером ще не існує - додаємо її.
-  if (!existingClassroom) {
-    classrooms.push(classroom);
+// Масив товарів з категорії книги.
+const booksProducts: Books[] = [
+  {
+    id: 6,
+    name: "TypeScript для початківців",
+    price: 35,
+    description: "Навчальний посібник з TypeScript",
+    category: 'books',
+    author: "Іван Петренко",
+    publisher: "IT Видавництво",
+    pages: 300
+  },
+  {
+    id: 7,
+    name: "React та його екосистема",
+    price: 45,
+    description: "Поглиблений посібник по React",
+    category: 'books',
+    author: "Марія Коваленко",
+    publisher: "Frontend Publishing",
+    pages: 450
   }
-}
+];
+
+// 5. ДЕМОНСТРАЦІЯ РОБОТИ ВСІХ ФУНКЦІЙ.
 
 /**
- * Додає новий курс до системи.
- * @param course - об'єкт курсу для додавання.
+ * Демонструє роботу всіх створених функцій інтернет-магазину.
  */
-function addCourse(course: Course): void {
-  // Перевіряємо, чи не існує вже курс з таким самим ID.
-  const existingCourse = courses.find(c => c.id === course.id);
-  // Якщо курс з таким ID ще не існує - додаємо його.
-  if (!existingCourse) {
-    courses.push(course);
-  }
-}
-
-// 5. ВАЛІДАЦІЯ ТА КОНФЛІКТИ.
-
-/**
- * Перевіряє, чи нове заняття не конфліктує з існуючим розкладом.
- * @param lesson - заняття для перевірки.
- * @returns інформацію про конфлікт або null, якщо конфліктів немає.
- */
-function validateLesson(lesson: Lesson): ScheduleConflict | null {
-  // Перебираємо всі заняття в розкладі.
-  for (const scheduled of schedule) {
-    // Якщо день або час не співпадають - пропускаємо перевірку.
-    if (scheduled.dayOfWeek !== lesson.dayOfWeek || scheduled.timeSlot !== lesson.timeSlot) {
-      continue;
-    }
-
-    // Перевіряємо конфлікт викладача (один викладач не може бути в двох місцях одночасно).
-    if (scheduled.professorId === lesson.professorId) {
-      return {
-        type: "ProfessorConflict",
-        conflictingLesson: scheduled,
-        newLesson: lesson
-      };
-    }
-
-    // Перевіряємо конфлікт аудиторії (одна аудиторія не може бути зайнята двома заняттями одночасно).
-    if (scheduled.classroomNumber === lesson.classroomNumber) {
-      return {
-        type: "ClassroomConflict", 
-        conflictingLesson: scheduled,
-        newLesson: lesson
-      };
-    }
-  }
-  // Якщо жодних конфліктів не знайдено - повертаємо null.
-  return null;
-}
-
-/**
- * Додає нове заняття до розкладу з перевіркою на конфлікти.
- * @param lesson - заняття для додавання.
- * @returns об'єкт з інформацією про результат операції.
- */
-function addLesson(lesson: Lesson): { success: boolean; lessonId?: number; conflict?: ScheduleConflict } {
-  // Перевіряємо, чи існують всі необхідні сутності в системі.
-  const professorExists = professors.some(p => p.id === lesson.professorId);
-  const courseExists = courses.some(c => c.id === lesson.courseId);
-  const classroomExists = classrooms.some(c => c.number === lesson.classroomNumber);
-
-  // Якщо хоча б одна сутність не існує - повертаємо помилку.
-  if (!professorExists || !courseExists || !classroomExists) {
-    return { success: false };
-  }
-
-  // Перевіряємо наявність конфліктів з існуючим розкладом.
-  const conflict = validateLesson(lesson);
-  if (conflict) {
-    return { success: false, conflict };
-  }
-
-  // Створюємо нове заняття з унікальним ID.
-  const scheduledLesson: ScheduledLesson = {
-    ...lesson,           // Копіюємо всі поля з оригінального заняття.
-    lessonId: nextLessonId++  // Додаємо унікальний ID та збільшуємо лічильник.
-  };
-
-  // Додаємо заняття до розкладу.
-  schedule.push(scheduledLesson);
-  // Повертаємо успішний результат з ID створеного заняття.
-  return { success: true, lessonId: scheduledLesson.lessonId };
-}
-
-// 6. ПОШУК ТА ФІЛЬТРАЦІЯ.
-
-/**
- * Знаходить вільні аудиторії для вказаного часу та дня.
- * @param timeSlot - часовий проміжок.
- * @param dayOfWeek - день тижня.
- * @returns масив вільних аудиторій.
- */
-function findAvailableClassrooms(timeSlot: TimeSlot, dayOfWeek: DayOfWeek): Classroom[] {
-  // Створюємо Set з номерами зайнятих аудиторій у вказаний час.
-  const occupiedClassrooms = new Set(
-    schedule
-      .filter(lesson => lesson.dayOfWeek === dayOfWeek && lesson.timeSlot === timeSlot)
-      .map(lesson => lesson.classroomNumber)
-  );
-
-  // Фільтруємо всі аудиторії, залишаючи тільки ті, які не зайняті.
-  return classrooms.filter(classroom => !occupiedClassrooms.has(classroom.number));
-}
-
-/**
- * Отримує розклад конкретного викладача.
- * @param professorId - ID викладача.
- * @returns масив занять викладача.
- */
-function getProfessorSchedule(professorId: number): ScheduledLesson[] {
-  // Фільтруємо розклад, залишаючи тільки заняття вказаного викладача.
-  return schedule.filter(lesson => lesson.professorId === professorId);
-}
-
-/**
- * Отримує розклад конкретної аудиторії.
- * @param classroomNumber - номер аудиторії.
- * @returns масив залень в аудиторії.
- */
-function getClassroomSchedule(classroomNumber: string): ScheduledLesson[] {
-  // Фільтруємо розклад, залишаючи тільки заняття в указаній аудиторії.
-  return schedule.filter(lesson => lesson.classroomNumber === classroomNumber);
-}
-
-// 7. АНАЛІТИКА ТА ЗВІТИ.
-
-/**
- * Розраховує відсоток використання аудиторії.
- * @param classroomNumber - номер аудиторії.
- * @returns відсоток використання (0-100).
- */
-function getClassroomUtilization(classroomNumber: string): number {
-  // Загальна кількість можливих занять (5 днів * 5 проміжків).
-  const totalSlots = WORK_DAYS.length * TIME_SLOTS.length;
-  // Кількість фактично використаних занять в аудиторії.
-  const usedSlots = schedule.filter(lesson => 
-    lesson.classroomNumber === classroomNumber
-  ).length;
+const demoFunctions = () => {
+  // Виводимо заголовок демонстрації.
+  console.log('- ДЕМОНСТРАЦІЯ РОБОТИ ІНТЕРНЕТ-МАГАЗИНУ:\n');
   
-  // Розраховуємо відсоток використання та округлюємо до 2 знаків після коми.
-  return Number(((usedSlots / totalSlots) * 100).toFixed(2));
-}
-
-/**
- * Визначає найпопулярніший тип занять
- * @returns тип найпопулярнішого заняття
- */
-function getMostPopularCourseType(): CourseType {
-  // Створюємо Map для підрахунку кількості залень кожного типу.
-  const typeCounts = new Map<CourseType, number>();
+  // Демонстрація пошуку товарів.
+  console.log('1. ПОШУК ТОВАРІВ.');
+  // Шукаємо телефон за ID 1.
+  const foundPhone = findProduct(electronicsProducts, 1);
+  // Виводимо знайдений телефон.
+  console.log('Знайдений телефон:', foundPhone);
+  // Шукаємо книгу за ID 6.
+  const foundBook = findProduct(booksProducts, 6);
+  // Виводимо знайдену книгу.
+  console.log('Знайдена книга:', foundBook);
+  // Шукаємо неіснуючий товар.
+  const notFound = findProduct(electronicsProducts, 999);
+  // Виводимо результат пошуку неіснуючого товару.
+  console.log('Неіснуючий товар:', notFound);
   
-  // Перебираємо всі заняття в розкладі.
-  schedule.forEach(lesson => {
-    // Знаходимо курс, до якого належить заняття.
-    const course = courses.find(c => c.id === lesson.courseId);
-    if (course) {
-      // Збільшуємо лічильник для типу курсу.
-      typeCounts.set(course.type, (typeCounts.get(course.type) || 0) + 1);
-    }
-  });
-
-  // Встановлюємо початкові значення для пошуку максимуму.
-  let mostPopular: CourseType = "Lecture";
-  let maxCount = 0;
-
-  // Шукаємо тип з найбільшою кількістю занять.
-  typeCounts.forEach((count, type) => {
-    if (count > maxCount) {
-      maxCount = count;
-      mostPopular = type;
-    }
-  });
-
-  return mostPopular;
-}
-
-/**
- * Знаходить найзавантаженіших викладачів.
- * @returns масив викладачів, відсортований за завантаженістю.
- */
-function getBusiestProfessors(): Professor[] {
-  // Створюємо Map для підрахунку кількості залень у кожного викладача.
-  const professorWorkload = new Map<number, number>();
+  // Демонстрація фільтрації за ціною.
+  console.log('\n2. ФІЛЬТРАЦІЯ ЗА ЦІНОЮ.');
+  // Фільтруємо електроніку за ціною до 1000.
+  const affordableElectronics = filterByPrice(electronicsProducts, 1000);
+  // Виводимо відфільтровану електроніку.
+  console.log('Електроніка до 1000$:', affordableElectronics);
+  // Фільтруємо одяг за ціною до 50.
+  const affordableClothing = filterByPrice(clothingProducts, 50);
+  // Виводимо відфільтрований одяг.
+  console.log('Одяг до 50$:', affordableClothing);
   
-  // Перебираємо всі заняття та рахуємо кількість для кожного викладача.
-  schedule.forEach(lesson => {
-    professorWorkload.set(lesson.professorId, (professorWorkload.get(lesson.professorId) || 0) + 1);
-  });
-
-  // Перетворюємо Map в масив, сортуємо за спаданням навантаження.
-  return Array.from(professorWorkload.entries())
-    .sort(([,a], [,b]) => b - a)  // Сортуємо за кількістю залень (спадання).
-    .map(([professorId]) => professors.find(p => p.id === professorId)) // Знаходимо об'єкти викладачів.
-    .filter((p): p is Professor => p !== undefined)  // Фільтруємо undefined значення.
-    .slice(0, 5);  // Беремо топ-5 найзавантаженіших.
-}
-
-// 8. МОДИФІКАЦІЯ РОЗКЛАДУ.
-
-/**
- * Змінює аудиторію для існуючого заняття.
- * @param lessonId - ID заняття.
- * @param newClassroomNumber - новий номер аудиторії.
- * @returns true, якщо зміна успішна, false - якщо ні.
- */
-function reassignClassroom(lessonId: number, newClassroomNumber: string): boolean {
-  // Знаходимо індекс заняття в масиві розкладу.
-  const lessonIndex = schedule.findIndex(lesson => lesson.lessonId === lessonId);
-  // Якщо заняття не знайдено - повертаємо false.
-  if (lessonIndex === -1) return false;
-
-  // Отримуємо об'єкт заняття.
-  const lesson = schedule[lessonIndex];
-  // Перевіряємо, чи існує нова аудиторія.
-  const classroomExists = classrooms.some(c => c.number === newClassroomNumber);
-  if (!classroomExists) return false;
-
-  // Перевіряємо, чи нова аудиторія вільна в потрібний час.
-  const hasConflict = schedule.some(scheduled => 
-    scheduled.lessonId !== lessonId &&  // Не перевіряємо поточне заняття.
-    scheduled.classroomNumber === newClassroomNumber &&  // Та сама аудиторія.
-    scheduled.dayOfWeek === lesson.dayOfWeek &&  // Той самий день.
-    scheduled.timeSlot === lesson.timeSlot        // Той самий час.
-  );
-
-  // Якщо є конфлікт - повертаємо false.
-  if (hasConflict) return false;
-
-  // Оновлюємо номер аудиторії для заняття.
-  schedule[lessonIndex] = { ...lesson, classroomNumber: newClassroomNumber };
-  return true;
-}
-
-/**
- * Видаляє заняття з розкладу.
- * @param lessonId - ID заняття для видалення.
- * @returns true, якщо видалення успішне, false - якщо ні.
- */
-function cancelLesson(lessonId: number): boolean {
-  // Знаходимо індекс заняття в масиві розкладу.
-  const lessonIndex = schedule.findIndex(lesson => lesson.lessonId === lessonId);
-  // Якщо заняття не знайдено - повертаємо false.
-  if (lessonIndex === -1) return false;
-
-  // Видаляємо заняття з масиву за допомогою splice.
-  schedule.splice(lessonIndex, 1);
-  return true;
-}
-
-/**
- * Переносить заняття на інший день та час.
- * @param lessonId - ID заняття.
- * @param newDay - новий день тижня.
- * @param newTime - новий часовий проміжок.
- * @returns true, якщо перенесення успішне, false - якщо ні.
- */
-function rescheduleLesson(lessonId: number, newDay: DayOfWeek, newTime: TimeSlot): boolean {
-  // Знаходимо індекс заняття в масиві розкладу.
-  const lessonIndex = schedule.findIndex(lesson => lesson.lessonId === lessonId);
-  // Якщо заняття не знайдено - повертаємо false.
-  if (lessonIndex === -1) return false;
-
-  // Отримуємо об'єкт заняття.
-  const lesson = schedule[lessonIndex];
-  // Створюємо копію заняття з новим днем та часом.
-  const rescheduledLesson: Lesson = {
-    ...lesson,
-    dayOfWeek: newDay,
-    timeSlot: newTime
-  };
-
-  // Перевіряємо, чи новий час не конфліктує з існуючим розкладом.
-  const conflict = validateLesson(rescheduledLesson);
-  if (conflict) return false;
-
-  // Оновлюємо заняття в розкладі.
-  schedule[lessonIndex] = { ...rescheduledLesson, lessonId };
-  return true;
-}
-
-// 9. ДОДАТКОВІ ФУНКЦІЇ.
-
-/**
- * Знаходить вільні часові проміжки для викладача або аудиторії.
- * @param professorId - ID викладача.
- * @param classroomNumber - номер аудиторії.
- * @returns масив вільних днів та часових проміжків.
- */
-function findAvailableTimeSlots(professorId?: number, classroomNumber?: string): 
-  { day: DayOfWeek; slot: TimeSlot }[] {
+  // Демонстрація фільтрації за категорією.
+  console.log('\n3. ФІЛЬТРАЦІЯ ЗА КАТЕГОРІЄЮ.');
+  // Об'єднуємо всі товари в один масив.
+  const allProducts = [...electronicsProducts, ...clothingProducts, ...booksProducts];
+  // Фільтруємо тільки електроніку.
+  const allElectronics = filterByCategory(allProducts, 'electronics');
+  // Виводимо відфільтровану електроніку.
+  console.log('Вся електроніка:', allElectronics);
   
-  // Створюємо масив для зберігання вільних проміжків.
-  const availableSlots: { day: DayOfWeek; slot: TimeSlot }[] = [];
+  // Демонстрація роботи з кошиком.
+  console.log('\n4. РОБОТА З КОШИКОМ.');
+  // Створюємо порожній кошик.
+  let cart: CartItem<Product>[] = [];
+  // Додаємо телефон до кошика в кількості 2 штук.
+  if (foundPhone) {
+    cart = addToCart(cart, foundPhone, 2);
+  }
+  // Додаємо книгу до кошика в кількості 1 штуки.
+  if (foundBook) {
+    cart = addToCart(cart, foundBook, 1);
+  }
+  // Знаходимо джинси за ID.
+  const jeans = findProduct(clothingProducts, 5);
+  // Додаємо джинси до кошика в кількості 1 штуки.
+  if (jeans) {
+    cart = addToCart(cart, jeans, 1);
+  }
+  // Виводимо вміст кошика.
+  console.log('Кошик після додавання товарів:', cart);
+  // Виводимо загальну кількість товарів у кошику.
+  console.log('Кількість товарів у кошику:', getCartItemsCount(cart));
+  // Виводимо загальну вартість кошика.
+  console.log('Загальна вартість кошика:', calculateTotal(cart));
+  
+  // Демонстрація видалення товару з кошика.
+  console.log('\n5. ВИДАЛЕННЯ ТОВАРУ З КОШИКА.');
+  // Видаляємо телефон з кошика за ID.
+  cart = removeFromCart(cart, 1);
+  // Виводимо оновлений кошик.
+  console.log('Кошик після видалення телефону:', cart);
+  // Виводимо оновлену кількість товарів у кошику.
+  console.log('Оновлена кількість товарів:', getCartItemsCount(cart));
+  // Виводимо оновлену загальну вартість кошика.
+  console.log('Оновлена загальна вартість:', calculateTotal(cart));
+  
+  // Демонстрація типобезпеки.
+  console.log('\n6. ДЕМОНСТРАЦІЯ ТИПОБЕЗПЕКИ:');
+  // Цей код викличе помилку TypeScript, якщо розкоментувати.
+  // const invalidProduct = { id: 99, name: "Invalid" };
+  // cart = addToCart(cart, invalidProduct, 1);
+  // Виводимо підтвердження типобезпеки.
+  console.log('Типобезпека забезпечує коректність даних.');
+  
+  // Виводимо завершення демонстрації.
+  console.log('\nДемонстрація завершена успішно.');
+};
 
-  // Перебираємо всі дні тижня.
-  WORK_DAYS.forEach(day => {
-    // Перебираємо всі часові проміжки.
-    TIME_SLOTS.forEach(slot => {
-      // Перевіряємо, чи є конфлікт для поточного дня та часу.
-      const hasConflict = schedule.some(lesson => {
-        // Якщо день або час не співпадають - конфлікту немає.
-        if (lesson.dayOfWeek !== day || lesson.timeSlot !== slot) return false;
-        // Перевіряємо конфлікт для викладача.
-        if (professorId && lesson.professorId === professorId) return true;
-        // Перевіряємо конфлікт для аудиторії.
-        if (classroomNumber && lesson.classroomNumber === classroomNumber) return true;
-        return false;
-      });
-
-      // Якщо конфліктів немає - додаємо проміжок до вільних.
-      if (!hasConflict) {
-        availableSlots.push({ day, slot });
-      }
-    });
-  });
-
-  return availableSlots;
-}
-
-/**
- * Генерує статистику по системі.
- * @returns об'єкт зі статистикою.
- */
-function getScheduleStatistics() {
-  return {
-    totalLessons: schedule.length,  // Загальна кількість занять.
-    totalProfessors: professors.length,  // Кількість викладачів.
-    totalClassrooms: classrooms.length,  // Кількість аудиторій.
-    totalCourses: courses.length,  // Кількість курсів.
-    // Загальний рівень використання ресурсів.
-    utilizationRate: Number((
-      schedule.length / (WORK_DAYS.length * TIME_SLOTS.length * classrooms.length) * 100
-    ).toFixed(2)),
-    mostPopularCourseType: getMostPopularCourseType(),  // Найпопулярніший тип занять.
-    busiestProfessors: getBusiestProfessors().map(p => p.name)  // Імена найзавантаженіших викладачів.
-  };
-}
-
-// 10. ДЕМОНСТРАЦІЯ РОБОТИ.
-
-/**
- * Ініціалізує тестові дані для демонстрації роботи системи.
- */
-function initializeDemoData(): void {
-  // Додаємо тестових викладачів.
-  addProfessor({ id: 1, name: "Доктор Сміт", department: "Комп'ютерні науки" });
-  addProfessor({ id: 2, name: "Професор Джонсон", department: "Математика" });
-  addProfessor({ id: 3, name: "Доктор Браун", department: "Фізика" });
-
-  // Додаємо тестові аудиторії.
-  addClassroom({ number: "A101", capacity: 30, hasProjector: true });
-  addClassroom({ number: "B202", capacity: 25, hasProjector: false });
-  addClassroom({ number: "C303", capacity: 50, hasProjector: true });
-
-  // Додаємо тестові курси.
-  addCourse({ id: 101, name: "Алгоритми", type: "Lecture" });
-  addCourse({ id: 102, name: "Математичний аналіз", type: "Practice" });
-  addCourse({ id: 103, name: "Квантова фізика", type: "Lab" });
-}
-
-/**
- * Запускає демонстрацію роботи системи.
- */
-function runDemo(): void {
-  // Ініціалізуємо тестові дані.
-  initializeDemoData();
-
-  console.log("=== ТЕСТУВАННЯ СИСТЕМИ УПРАВЛІННЯ РОЗКЛАДОМ ===");
-  console.log("");
-
-  // Тест 1: Додавання заняття.
-  const lesson1: Lesson = {
-    courseId: 101,
-    professorId: 1,
-    classroomNumber: "A101",
-    dayOfWeek: "Monday",
-    timeSlot: "8:30-10:00"
-  };
-
-  const result1 = addLesson(lesson1);
-  console.log("Додавання заняття 1:", result1.success ? "Успішно." : "Помилка.");
-
-  // Тест 2: Спроба додати заняття з конфліктом аудиторії.
-  const lesson2: Lesson = {
-    courseId: 102,
-    professorId: 2,
-    classroomNumber: "A101", // Та сама аудиторія.
-    dayOfWeek: "Monday",
-    timeSlot: "8:30-10:00"  // Той самий час.
-  };
-
-  const result2 = addLesson(lesson2);
-  console.log("Додавання заняття 2 (конфлікт):", 
-    result2.success ? "Успішно." : `Помилка - ${result2.conflict?.type}.`);
-
-  // Тест 3: Успішне додавання заняття без конфліктів.
-  const lesson3: Lesson = {
-    courseId: 103,
-    professorId: 3,
-    classroomNumber: "B202",
-    dayOfWeek: "Tuesday", 
-    timeSlot: "10:15-11:45"
-  };
-
-  const result3 = addLesson(lesson3);
-  console.log("Додавання заняття 3:", result3.success ? "Успішно." : "Помилка.");
-
-  // Тест 4: Пошук вільних аудиторій.
-  const available = findAvailableClassrooms("8:30-10:00", "Monday");
-  console.log("Вільні аудиторії в понеділок о 8:30-10:00:", 
-    available.map(room => room.number) + ".");
-
-  // Тест 5: Отримання статистики системи.
-  const stats = getScheduleStatistics();
-  console.log("");
-  console.log("Статистика системи:", stats);
-  console.log("");
-
-  // Тест 6: Вивід завантаженості аудиторій.
-  console.log("Завантаженість аудиторій:");
-  classrooms.forEach(room => {
-    const utilization = getClassroomUtilization(room.number);
-    console.log(`Аудиторія ${room.number}: ${utilization}%.`);
-  });
-}
-
-// Запускаємо демонстрацію роботи системи.
-runDemo();
+// Запускаємо демонстрацію роботи всіх функцій.
+demoFunctions();

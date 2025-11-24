@@ -1,242 +1,182 @@
 "use strict";
-const professors = [];
-const classrooms = [];
-const courses = [];
-const schedule = [];
-let nextLessonId = 1;
-const WORK_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const TIME_SLOTS = [
-    "8:30-10:00", "10:15-11:45", "12:15-13:45",
-    "14:00-15:30", "15:45-17:15"
+const findProduct = (products, id) => {
+    if (!Array.isArray(products)) {
+        throw new Error('Products must be an array');
+    }
+    if (typeof id !== 'number' || id <= 0) {
+        throw new Error('ID must be a positive number');
+    }
+    return products.find(product => product.id === id);
+};
+const filterByPrice = (products, maxPrice) => {
+    if (!Array.isArray(products)) {
+        throw new Error('Products must be an array');
+    }
+    if (typeof maxPrice !== 'number' || maxPrice < 0) {
+        throw new Error('Max price must be a non-negative number');
+    }
+    return products.filter(product => product.price <= maxPrice);
+};
+const filterByCategory = (products, category) => {
+    if (!Array.isArray(products)) {
+        throw new Error('Products must be an array');
+    }
+    return products.filter(product => 'category' in product && product.category === category);
+};
+const addToCart = (cart, product, quantity) => {
+    if (!Array.isArray(cart)) {
+        throw new Error('Cart must be an array');
+    }
+    if (typeof quantity !== 'number' || quantity <= 0) {
+        throw new Error('Quantity must be a positive number');
+    }
+    const existingItemIndex = cart.findIndex(item => item.product.id === product.id);
+    if (existingItemIndex !== -1) {
+        const updatedCart = [...cart];
+        updatedCart[existingItemIndex] = {
+            ...updatedCart[existingItemIndex],
+            quantity: updatedCart[existingItemIndex].quantity + quantity
+        };
+        return updatedCart;
+    }
+    else {
+        return [...cart, { product, quantity }];
+    }
+};
+const removeFromCart = (cart, productId) => {
+    if (!Array.isArray(cart)) {
+        throw new Error('Cart must be an array');
+    }
+    return cart.filter(item => item.product.id !== productId);
+};
+const calculateTotal = (cart) => {
+    if (!Array.isArray(cart)) {
+        throw new Error('Cart must be an array');
+    }
+    return cart.reduce((total, item) => {
+        return total + (item.product.price * item.quantity);
+    }, 0);
+};
+const getCartItemsCount = (cart) => {
+    if (!Array.isArray(cart)) {
+        throw new Error('Cart must be an array');
+    }
+    return cart.reduce((count, item) => count + item.quantity, 0);
+};
+const electronicsProducts = [
+    {
+        id: 1,
+        name: "iPhone 15",
+        price: 999,
+        description: "Смартфон від компанії Apple",
+        category: 'electronics',
+        brand: 'Apple',
+        warranty: 24
+    },
+    {
+        id: 2,
+        name: "Samsung Galaxy S24",
+        price: 899,
+        description: "Смартфон від компанії Samsung",
+        category: 'electronics',
+        brand: 'Samsung',
+        warranty: 18
+    },
+    {
+        id: 3,
+        name: "MacBook Pro",
+        price: 2499,
+        description: "Ноутбук для професійних завдань",
+        category: 'electronics',
+        brand: 'Apple',
+        warranty: 36
+    }
 ];
-function addProfessor(professor) {
-    const existingProfessor = professors.find(p => p.id === professor.id);
-    if (!existingProfessor) {
-        professors.push(professor);
+const clothingProducts = [
+    {
+        id: 4,
+        name: "Футболка",
+        price: 25,
+        description: "Бавовняна футболка чорного кольору",
+        category: 'clothing',
+        size: 'M',
+        color: 'Чорний',
+        material: 'Бавовна'
+    },
+    {
+        id: 5,
+        name: "Джинси",
+        price: 89,
+        description: "Класичні сині джинси",
+        category: 'clothing',
+        size: 'L',
+        color: 'Синій',
+        material: 'Деним'
     }
-}
-function addClassroom(classroom) {
-    const existingClassroom = classrooms.find(c => c.number === classroom.number);
-    if (!existingClassroom) {
-        classrooms.push(classroom);
+];
+const booksProducts = [
+    {
+        id: 6,
+        name: "TypeScript для початківців",
+        price: 35,
+        description: "Навчальний посібник з TypeScript",
+        category: 'books',
+        author: "Іван Петренко",
+        publisher: "IT Видавництво",
+        pages: 300
+    },
+    {
+        id: 7,
+        name: "React та його екосистема",
+        price: 45,
+        description: "Поглиблений посібник по React",
+        category: 'books',
+        author: "Марія Коваленко",
+        publisher: "Frontend Publishing",
+        pages: 450
     }
-}
-function addCourse(course) {
-    const existingCourse = courses.find(c => c.id === course.id);
-    if (!existingCourse) {
-        courses.push(course);
+];
+const demoFunctions = () => {
+    console.log('- ДЕМОНСТРАЦІЯ РОБОТИ ІНТЕРНЕТ-МАГАЗИНУ:\n');
+    console.log('1. ПОШУК ТОВАРІВ.');
+    const foundPhone = findProduct(electronicsProducts, 1);
+    console.log('Знайдений телефон:', foundPhone);
+    const foundBook = findProduct(booksProducts, 6);
+    console.log('Знайдена книга:', foundBook);
+    const notFound = findProduct(electronicsProducts, 999);
+    console.log('Неіснуючий товар:', notFound);
+    console.log('\n2. ФІЛЬТРАЦІЯ ЗА ЦІНОЮ.');
+    const affordableElectronics = filterByPrice(electronicsProducts, 1000);
+    console.log('Електроніка до 1000$:', affordableElectronics);
+    const affordableClothing = filterByPrice(clothingProducts, 50);
+    console.log('Одяг до 50$:', affordableClothing);
+    console.log('\n3. ФІЛЬТРАЦІЯ ЗА КАТЕГОРІЄЮ.');
+    const allProducts = [...electronicsProducts, ...clothingProducts, ...booksProducts];
+    const allElectronics = filterByCategory(allProducts, 'electronics');
+    console.log('Вся електроніка:', allElectronics);
+    console.log('\n4. РОБОТА З КОШИКОМ.');
+    let cart = [];
+    if (foundPhone) {
+        cart = addToCart(cart, foundPhone, 2);
     }
-}
-function validateLesson(lesson) {
-    for (const scheduled of schedule) {
-        if (scheduled.dayOfWeek !== lesson.dayOfWeek || scheduled.timeSlot !== lesson.timeSlot) {
-            continue;
-        }
-        if (scheduled.professorId === lesson.professorId) {
-            return {
-                type: "ProfessorConflict",
-                conflictingLesson: scheduled,
-                newLesson: lesson
-            };
-        }
-        if (scheduled.classroomNumber === lesson.classroomNumber) {
-            return {
-                type: "ClassroomConflict",
-                conflictingLesson: scheduled,
-                newLesson: lesson
-            };
-        }
+    if (foundBook) {
+        cart = addToCart(cart, foundBook, 1);
     }
-    return null;
-}
-function addLesson(lesson) {
-    const professorExists = professors.some(p => p.id === lesson.professorId);
-    const courseExists = courses.some(c => c.id === lesson.courseId);
-    const classroomExists = classrooms.some(c => c.number === lesson.classroomNumber);
-    if (!professorExists || !courseExists || !classroomExists) {
-        return { success: false };
+    const jeans = findProduct(clothingProducts, 5);
+    if (jeans) {
+        cart = addToCart(cart, jeans, 1);
     }
-    const conflict = validateLesson(lesson);
-    if (conflict) {
-        return { success: false, conflict };
-    }
-    const scheduledLesson = {
-        ...lesson,
-        lessonId: nextLessonId++
-    };
-    schedule.push(scheduledLesson);
-    return { success: true, lessonId: scheduledLesson.lessonId };
-}
-function findAvailableClassrooms(timeSlot, dayOfWeek) {
-    const occupiedClassrooms = new Set(schedule
-        .filter(lesson => lesson.dayOfWeek === dayOfWeek && lesson.timeSlot === timeSlot)
-        .map(lesson => lesson.classroomNumber));
-    return classrooms.filter(classroom => !occupiedClassrooms.has(classroom.number));
-}
-function getProfessorSchedule(professorId) {
-    return schedule.filter(lesson => lesson.professorId === professorId);
-}
-function getClassroomSchedule(classroomNumber) {
-    return schedule.filter(lesson => lesson.classroomNumber === classroomNumber);
-}
-function getClassroomUtilization(classroomNumber) {
-    const totalSlots = WORK_DAYS.length * TIME_SLOTS.length;
-    const usedSlots = schedule.filter(lesson => lesson.classroomNumber === classroomNumber).length;
-    return Number(((usedSlots / totalSlots) * 100).toFixed(2));
-}
-function getMostPopularCourseType() {
-    const typeCounts = new Map();
-    schedule.forEach(lesson => {
-        const course = courses.find(c => c.id === lesson.courseId);
-        if (course) {
-            typeCounts.set(course.type, (typeCounts.get(course.type) || 0) + 1);
-        }
-    });
-    let mostPopular = "Lecture";
-    let maxCount = 0;
-    typeCounts.forEach((count, type) => {
-        if (count > maxCount) {
-            maxCount = count;
-            mostPopular = type;
-        }
-    });
-    return mostPopular;
-}
-function getBusiestProfessors() {
-    const professorWorkload = new Map();
-    schedule.forEach(lesson => {
-        professorWorkload.set(lesson.professorId, (professorWorkload.get(lesson.professorId) || 0) + 1);
-    });
-    return Array.from(professorWorkload.entries())
-        .sort(([, a], [, b]) => b - a)
-        .map(([professorId]) => professors.find(p => p.id === professorId))
-        .filter((p) => p !== undefined)
-        .slice(0, 5);
-}
-function reassignClassroom(lessonId, newClassroomNumber) {
-    const lessonIndex = schedule.findIndex(lesson => lesson.lessonId === lessonId);
-    if (lessonIndex === -1)
-        return false;
-    const lesson = schedule[lessonIndex];
-    const classroomExists = classrooms.some(c => c.number === newClassroomNumber);
-    if (!classroomExists)
-        return false;
-    const hasConflict = schedule.some(scheduled => scheduled.lessonId !== lessonId &&
-        scheduled.classroomNumber === newClassroomNumber &&
-        scheduled.dayOfWeek === lesson.dayOfWeek &&
-        scheduled.timeSlot === lesson.timeSlot);
-    if (hasConflict)
-        return false;
-    schedule[lessonIndex] = { ...lesson, classroomNumber: newClassroomNumber };
-    return true;
-}
-function cancelLesson(lessonId) {
-    const lessonIndex = schedule.findIndex(lesson => lesson.lessonId === lessonId);
-    if (lessonIndex === -1)
-        return false;
-    schedule.splice(lessonIndex, 1);
-    return true;
-}
-function rescheduleLesson(lessonId, newDay, newTime) {
-    const lessonIndex = schedule.findIndex(lesson => lesson.lessonId === lessonId);
-    if (lessonIndex === -1)
-        return false;
-    const lesson = schedule[lessonIndex];
-    const rescheduledLesson = {
-        ...lesson,
-        dayOfWeek: newDay,
-        timeSlot: newTime
-    };
-    const conflict = validateLesson(rescheduledLesson);
-    if (conflict)
-        return false;
-    schedule[lessonIndex] = { ...rescheduledLesson, lessonId };
-    return true;
-}
-function findAvailableTimeSlots(professorId, classroomNumber) {
-    const availableSlots = [];
-    WORK_DAYS.forEach(day => {
-        TIME_SLOTS.forEach(slot => {
-            const hasConflict = schedule.some(lesson => {
-                if (lesson.dayOfWeek !== day || lesson.timeSlot !== slot)
-                    return false;
-                if (professorId && lesson.professorId === professorId)
-                    return true;
-                if (classroomNumber && lesson.classroomNumber === classroomNumber)
-                    return true;
-                return false;
-            });
-            if (!hasConflict) {
-                availableSlots.push({ day, slot });
-            }
-        });
-    });
-    return availableSlots;
-}
-function getScheduleStatistics() {
-    return {
-        totalLessons: schedule.length,
-        totalProfessors: professors.length,
-        totalClassrooms: classrooms.length,
-        totalCourses: courses.length,
-        utilizationRate: Number((schedule.length / (WORK_DAYS.length * TIME_SLOTS.length * classrooms.length) * 100).toFixed(2)),
-        mostPopularCourseType: getMostPopularCourseType(),
-        busiestProfessors: getBusiestProfessors().map(p => p.name)
-    };
-}
-function initializeDemoData() {
-    addProfessor({ id: 1, name: "Доктор Сміт", department: "Комп'ютерні науки" });
-    addProfessor({ id: 2, name: "Професор Джонсон", department: "Математика" });
-    addProfessor({ id: 3, name: "Доктор Браун", department: "Фізика" });
-    addClassroom({ number: "A101", capacity: 30, hasProjector: true });
-    addClassroom({ number: "B202", capacity: 25, hasProjector: false });
-    addClassroom({ number: "C303", capacity: 50, hasProjector: true });
-    addCourse({ id: 101, name: "Алгоритми", type: "Lecture" });
-    addCourse({ id: 102, name: "Математичний аналіз", type: "Practice" });
-    addCourse({ id: 103, name: "Квантова фізика", type: "Lab" });
-}
-function runDemo() {
-    initializeDemoData();
-    console.log("=== ТЕСТУВАННЯ СИСТЕМИ УПРАВЛІННЯ РОЗКЛАДОМ ===");
-    console.log("");
-    const lesson1 = {
-        courseId: 101,
-        professorId: 1,
-        classroomNumber: "A101",
-        dayOfWeek: "Monday",
-        timeSlot: "8:30-10:00"
-    };
-    const result1 = addLesson(lesson1);
-    console.log("Додавання заняття 1:", result1.success ? "Успішно." : "Помилка.");
-    const lesson2 = {
-        courseId: 102,
-        professorId: 2,
-        classroomNumber: "A101",
-        dayOfWeek: "Monday",
-        timeSlot: "8:30-10:00"
-    };
-    const result2 = addLesson(lesson2);
-    console.log("Додавання заняття 2 (конфлікт):", result2.success ? "Успішно." : `Помилка - ${result2.conflict?.type}.`);
-    const lesson3 = {
-        courseId: 103,
-        professorId: 3,
-        classroomNumber: "B202",
-        dayOfWeek: "Tuesday",
-        timeSlot: "10:15-11:45"
-    };
-    const result3 = addLesson(lesson3);
-    console.log("Додавання заняття 3:", result3.success ? "Успішно." : "Помилка.");
-    const available = findAvailableClassrooms("8:30-10:00", "Monday");
-    console.log("Вільні аудиторії в понеділок о 8:30-10:00:", available.map(room => room.number) + ".");
-    const stats = getScheduleStatistics();
-    console.log("");
-    console.log("Статистика системи:", stats);
-    console.log("");
-    console.log("Завантаженість аудиторій:");
-    classrooms.forEach(room => {
-        const utilization = getClassroomUtilization(room.number);
-        console.log(`Аудиторія ${room.number}: ${utilization}%.`);
-    });
-}
-runDemo();
+    console.log('Кошик після додавання товарів:', cart);
+    console.log('Кількість товарів у кошику:', getCartItemsCount(cart));
+    console.log('Загальна вартість кошика:', calculateTotal(cart));
+    console.log('\n5. ВИДАЛЕННЯ ТОВАРУ З КОШИКА.');
+    cart = removeFromCart(cart, 1);
+    console.log('Кошик після видалення телефону:', cart);
+    console.log('Оновлена кількість товарів:', getCartItemsCount(cart));
+    console.log('Оновлена загальна вартість:', calculateTotal(cart));
+    console.log('\n6. ДЕМОНСТРАЦІЯ ТИПОБЕЗПЕКИ:');
+    console.log('Типобезпека забезпечує коректність даних.');
+    console.log('\nДемонстрація завершена успішно.');
+};
+demoFunctions();
 //# sourceMappingURL=index.js.map
