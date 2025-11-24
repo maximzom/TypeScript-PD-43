@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Gallery - UserManager Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="index.html" class="nav-logo"><i class="fas fa-users-cog"></i> UserManager Pro</a>
+                <div class="nav-controls">
+                    <button id="themeToggle" class="nav-btn" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">Product Gallery</h1>
+                <p class="hero-subtitle">Explore our collection of products with detailed information</p>
+            </div>
+        </section>
+
+        <section class="controls-section">
+            <div class="container">
+                <div class="controls-grid">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="productSearch" placeholder="Search products by name or description...">
+                        <button id="clearSearch" class="clear-btn hidden">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <select id="categoryFilter" class="filter-select">
+                            <option value="all">All Categories</option>
+                            <option value="Laptops">Laptops</option>
+                            <option value="Headphones">Headphones</option>
+                            <option value="Smartphones">Smartphones</option>
+                            <option value="Monitors">Monitors</option>
+                            <option value="Accessories">Accessories</option>
+                        </select>
+                        
+                        <select id="priceFilter" class="filter-select">
+                            <option value="all">Any Price</option>
+                            <option value="0-100">Under $100</option>
+                            <option value="100-500">$100 - $500</option>
+                            <option value="500-1000">$500 - $1000</option>
+                            <option value="1000+">Over $1000</option>
+                        </select>
+
+                        <select id="sortSelect" class="filter-select">
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                            <option value="rating-desc">Highest Rated</option>
+                        </select>
+
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="inStockOnly">
+                            <span class="checkmark"></span>
+                            In Stock Only
+                        </label>
+                    </div>
+                </div>
+
+                <div class="price-range-section">
+                    <label for="priceRange">Price Range: $<span id="priceRangeValue">0 - 2500</span></label>
+                    <div class="range-slider">
+                        <input type="range" id="priceRange" min="0" max="2500" value="2500" class="slider">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="products-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2><i class="fas fa-shopping-bag"></i> Products</h2>
+                    <div class="results-info">
+                        <span id="resultsCount">5 products found</span>
+                    </div>
+                </div>
+
+                <div id="loadingSpinner" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading products...
+                </div>
+
+                <div id="productsContainer" class="products-grid">
+                    <!-- Products will be loaded here -->
+                </div>
+
+                <div id="emptyState" class="empty-state hidden">
+                    <i class="fas fa-search"></i>
+                    <h3>No products found</h3>
+                    <p>Try adjusting your search or filters</p>
+                    <button id="resetFilters" class="btn btn-outline">Reset Filters</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="productModal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="productModalTitle"><i class="fas fa-shopping-bag"></i> Product Details</h3>
+                <button id="closeProductModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="productModalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 UserManager Pro. Built with TypeScript & <i class="fas fa-heart"></i></p>
+            <div class="footer-links">
+                <a href="index.html" class="link-btn">Home</a>
+                <span class="separator">|</span>
+                <a href="users.html" class="link-btn">Users</a>
+                <span class="separator">|</span>
+                <a href="posts.html" class="link-btn">Posts</a>
+                <span class="separator">|</span>
+                <a href="gallery.html" class="link-btn">Gallery</a>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="dist/main.js"></script>
+</body>
+</html>

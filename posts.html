@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts & Articles - UserManager Pro</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="index.html" class="nav-logo"><i class="fas fa-users-cog"></i> UserManager Pro</a>
+                <div class="nav-controls">
+                    <button id="themeToggle" class="nav-btn" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">Posts & Articles</h1>
+                <p class="hero-subtitle">Discover interesting content and engage with the community</p>
+            </div>
+        </section>
+
+        <section class="controls-section">
+            <div class="container">
+                <div class="controls-grid">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="postSearch" placeholder="Search posts by title or content...">
+                        <button id="clearSearch" class="clear-btn hidden">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="filter-controls">
+                        <select id="categoryFilter" class="filter-select">
+                            <option value="all">All Categories</option>
+                            <option value="Programming">Programming</option>
+                            <option value="Design">Design</option>
+                            <option value="Backend">Backend</option>
+                            <option value="Career">Career</option>
+                            <option value="AI/ML">AI/ML</option>
+                        </select>
+                        
+                        <select id="sortSelect" class="filter-select">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="popular">Most Popular</option>
+                            <option value="title-asc">Title (A-Z)</option>
+                        </select>
+
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="featuredOnly">
+                            <span class="checkmark"></span>
+                            Featured Only
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="posts-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2><i class="fas fa-newspaper"></i> Latest Posts</h2>
+                    <div class="view-controls">
+                        <button id="cardViewBtn" class="view-btn active" title="Card View">
+                            <i class="fas fa-grip-horizontal"></i>
+                        </button>
+                        <button id="compactViewBtn" class="view-btn" title="Compact View">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="loadingSpinner" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading posts...
+                </div>
+
+                <div id="postsContainer" class="posts-grid">
+                    <!-- Posts will be loaded here -->
+                </div>
+
+                <div id="emptyState" class="empty-state hidden">
+                    <i class="fas fa-newspaper"></i>
+                    <h3>No posts found</h3>
+                    <p>Try adjusting your search or filters</p>
+                    <button id="resetFilters" class="btn btn-outline">Reset Filters</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Post Modal -->
+    <div id="postModal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="postModalTitle"><i class="fas fa-newspaper"></i> Post Details</h3>
+                <button id="closePostModal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="postModalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 UserManager Pro. Built with TypeScript & <i class="fas fa-heart"></i></p>
+            <div class="footer-links">
+                <a href="index.html" class="link-btn">Home</a>
+                <span class="separator">|</span>
+                <a href="users.html" class="link-btn">Users</a>
+                <span class="separator">|</span>
+                <a href="posts.html" class="link-btn">Posts</a>
+                <span class="separator">|</span>
+                <a href="gallery.html" class="link-btn">Gallery</a>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="dist/main.js"></script>
+</body>
+</html>

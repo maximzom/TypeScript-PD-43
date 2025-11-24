@@ -1,0 +1,16 @@
+{
+  "name": "usermanager-pro",
+  "version": "1.0.0",
+  "description": "Advanced management system with multiple data modules",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "build-all": "tsc",
+    "watch": "tsc --watch",
+    "dev": "tsc && live-server"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "live-server": "^1.2.2"
+  }
+}
